@@ -8,9 +8,11 @@ repos:
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml
-        exclude: "^charts/|^examples/|^[a-zA-Z-_]+.yaml"
+        exclude: "^charts/|^examples/|^[a-zA-Z-_]+.yaml|^.github/"
       - id: end-of-file-fixer
+        exclude: "^charts/|^examples/|^[a-zA-Z-_]+.yaml|^.github/|^[a-zA-Z-_]+.md"
       - id: trailing-whitespace
+        exclude: "^charts/|^examples/|^[a-zA-Z-_]+.yaml|^.github/|^[a-zA-Z-_]+.md"
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:
@@ -23,7 +25,7 @@ repos:
     rev: v2.4.0
     hooks:
       - id: setup-cfg-fmt
-        exclude: "^charts/|^examples/"
+        exclude: "^charts/|^examples/|^.github/"
   - repo: local
     hooks:
       - id: generate-types-schemas
@@ -31,4 +33,3 @@ repos:
         entry: make hook-gen-types-schemas
         language: system
         pass_filenames: false
-

@@ -1,15 +1,18 @@
-from pydantic import Field, ConfigDict
-from typing import Literal
 import typing as t
-from apolo_app_types.protocols.postgres import PostgresURI
+from typing import Literal
+
+from pydantic import ConfigDict, Field
+
 from apolo_app_types.protocols.common import (
+    AbstractAppFieldType,
     AppInputs,
     AppOutputs,
     BasicNetworkingConfig,
     Preset,
     SchemaExtraMetadata,
-    AbstractAppFieldType,
 )
+from apolo_app_types.protocols.postgres import PostgresURI
+
 
 class N8nDatabasePostgres(AbstractAppFieldType):
     model_config = ConfigDict(
@@ -58,6 +61,7 @@ class N8nDatabaseSQLite(AbstractAppFieldType):
 
 
 N8nStorage = N8nDatabaseSQLite | N8nDatabasePostgres
+
 
 class N8nAppInputs(AppInputs):
     preset: Preset

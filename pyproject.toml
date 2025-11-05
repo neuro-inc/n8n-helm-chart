@@ -108,4 +108,3 @@ junit_family = "xunit2"
 testpaths = [
   "./apolo/tests/",
 ]
-

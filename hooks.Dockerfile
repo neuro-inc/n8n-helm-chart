@@ -20,4 +20,3 @@ COPY .apolo .apolo
 RUN poetry install --only-root --no-cache
 
 ENTRYPOINT ["app-types"]
-
