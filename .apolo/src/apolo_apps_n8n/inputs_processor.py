@@ -11,7 +11,7 @@ from apolo_app_types.helm.apps.common import (
     preset_to_resources,
     preset_to_tolerations,
 )
-from apolo_app_types.protocols.common import Preset
+from apolo_app_types.protocols.common import AutoscalingHPA, Preset
 from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs
 from apolo_apps_n8n.db_utils import parse_postgres_connection_string
 
@@ -52,20 +52,39 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
 
     async def get_worker_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.worker_config
-        return {
+        values = {
             "service": {
                 "labels": {"service": "worker"},
             },
             **(await self.preset_to_values(config.preset)),
         }
+        if config.autoscaling:
+            values["autoscaling"] = self.get_autoscaling_values(config.autoscaling)
+        return values
 
     async def get_webhook_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.webhook_config
-        return {
+        values = {
             "service": {
                 "labels": {"service": "webhook"},
             },
             **(await self.preset_to_values(config.preset)),
+        }
+        if config.autoscaling:
+            values["autoscaling"] = self.get_autoscaling_values(config.autoscaling)
+        return values
+
+    def get_autoscaling_values(self, autoscaling: AutoscalingHPA) -> dict[str, t.Any]:
+        return {
+            "enabled": True,
+            "minReplicas": autoscaling.min_replicas,
+            "maxReplicas": autoscaling.max_replicas,
+            "targetCPUUtilizationPercentage": (
+                autoscaling.target_cpu_utilization_percentage
+            ),
+            "targetMemoryUtilizationPercentage": (
+                autoscaling.target_memory_utilization_percentage
+            ),
         }
 
     async def gen_extra_values(
@@ -108,7 +127,10 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             },
             "service": {"labels": {"service": "main"}},
         }
-
+        if input_.main_app_config.autoscaling:
+            main_config["autoscaling"] = self.get_autoscaling_values(
+                input_.main_app_config.autoscaling
+            )
         return {
             "apolo_app_id": extra_values["apolo_app_id"],
             "ingress": extra_values["ingress"],

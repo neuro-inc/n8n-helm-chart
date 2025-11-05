@@ -41,6 +41,66 @@
       "x-title": "Authentication Ingress Middleware",
       "x-type": "AuthIngressMiddleware"
     },
+    "AutoscalingHPA": {
+      "properties": {
+        "min_replicas": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Min Replicas",
+          "type": "integer",
+          "x-description": "Set the minimum number of replicas for your deployment.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Minimum Replicas"
+        },
+        "max_replicas": {
+          "default": 5,
+          "exclusiveMinimum": 0,
+          "title": "Max Replicas",
+          "type": "integer",
+          "x-description": "Limit the maximum number of replicas for your deployment.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Maximum Replicas"
+        },
+        "target_cpu_utilization_percentage": {
+          "default": 80,
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "title": "Target Cpu Utilization Percentage",
+          "type": "integer",
+          "x-description": "Choose target CPU utilization percentage for autoscaling.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Target CPU Utilization Percentage"
+        },
+        "target_memory_utilization_percentage": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Memory Utilization Percentage",
+          "x-description": "Choose target memory utilization percentage for autoscaling.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Target Memory Utilization Percentage"
+        }
+      },
+      "title": "AutoscalingHPA",
+      "type": "object",
+      "x-description": "Autoscaling configuration for Horizontal Pod Autoscaler.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Autoscaling HPA",
+      "x-type": "AutoscalingHPA"
+    },
     "BasicNetworkingConfig": {
       "description": "Common networking configuration for applications.",
       "properties": {
@@ -289,6 +349,21 @@
       "properties": {
         "preset": {
           "$ref": "#/$defs/Preset"
+        },
+        "autoscaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoscalingHPA"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "x-description": "Enable Autoscaling and configure it.",
+          "x-is-advanced-field": true,
+          "x-meta-type": "inline",
+          "x-title": "Autoscaling"
         }
       },
       "required": [
@@ -413,6 +488,21 @@
         "replicas": {
           "title": "Replicas",
           "type": "integer"
+        },
+        "autoscaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoscalingHPA"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "x-description": "Enable Autoscaling and configure it.",
+          "x-is-advanced-field": true,
+          "x-meta-type": "inline",
+          "x-title": "Autoscaling"
         }
       },
       "required": [
@@ -435,6 +525,21 @@
         "replicas": {
           "title": "Replicas",
           "type": "integer"
+        },
+        "autoscaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoscalingHPA"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "x-description": "Enable Autoscaling and configure it.",
+          "x-is-advanced-field": true,
+          "x-meta-type": "inline",
+          "x-title": "Autoscaling"
         }
       },
       "required": [

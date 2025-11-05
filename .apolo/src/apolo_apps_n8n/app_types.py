@@ -7,6 +7,7 @@ from apolo_app_types.protocols.common import (
     AbstractAppFieldType,
     AppInputs,
     AppOutputs,
+    AutoscalingHPA,
     Preset,
     SchemaExtraMetadata,
 )
@@ -72,6 +73,14 @@ class MainApplicationConfig(AbstractAppFieldType):
         ).as_json_schema_extra(),
     )
     preset: Preset
+    autoscaling: AutoscalingHPA | None = Field(
+        default=None,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Autoscaling",
+            description="Enable Autoscaling and configure it.",
+            is_advanced_field=True,
+        ).as_json_schema_extra(),
+    )
 
 
 class WorkerConfig(AbstractAppFieldType):
@@ -83,6 +92,14 @@ class WorkerConfig(AbstractAppFieldType):
     )
     preset: Preset
     replicas: int = Field()
+    autoscaling: AutoscalingHPA | None = Field(
+        default=None,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Autoscaling",
+            description="Enable Autoscaling and configure it.",
+            is_advanced_field=True,
+        ).as_json_schema_extra(),
+    )
 
 
 class WebhookConfig(AbstractAppFieldType):
@@ -94,6 +111,14 @@ class WebhookConfig(AbstractAppFieldType):
     )
     preset: Preset
     replicas: int = Field()
+    autoscaling: AutoscalingHPA | None = Field(
+        default=None,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Autoscaling",
+            description="Enable Autoscaling and configure it.",
+            is_advanced_field=True,
+        ).as_json_schema_extra(),
+    )
 
 
 class N8nAppInputs(AppInputs):
