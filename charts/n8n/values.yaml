@@ -242,6 +242,7 @@ main:
     type: ClusterIP
     # -- Service port
     port: 80
+    labels: {}
 
   resources: {}
   # We usually recommend not specifying default resources and to leave this as a conscious

@@ -58,6 +58,152 @@
       "x-title": "Networking Settings",
       "x-type": "BasicNetworkingConfig"
     },
+    "CrunchyPostgresUserCredentials": {
+      "properties": {
+        "user": {
+          "title": "User",
+          "type": "string",
+          "x-description": "Username for the Postgres user.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres User"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "x-description": "Password for the Postgres user.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Password"
+        },
+        "host": {
+          "title": "Host",
+          "type": "string",
+          "x-description": "Host of the Postgres instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Host"
+        },
+        "port": {
+          "exclusiveMinimum": 0,
+          "title": "Port",
+          "type": "integer",
+          "x-description": "Port of the Postgres instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Port"
+        },
+        "pgbouncer_host": {
+          "title": "Pgbouncer Host",
+          "type": "string",
+          "x-description": "Host of the PGBouncer instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "PGBouncer Host"
+        },
+        "pgbouncer_port": {
+          "exclusiveMinimum": 0,
+          "title": "Pgbouncer Port",
+          "type": "integer",
+          "x-description": "Port of the PGBouncer instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "PGBouncer Port"
+        },
+        "dbname": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dbname"
+        },
+        "jdbc_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Jdbc Uri"
+        },
+        "pgbouncer_jdbc_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pgbouncer Jdbc Uri"
+        },
+        "pgbouncer_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pgbouncer Uri"
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uri"
+        },
+        "postgres_uri": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostgresURI"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "user_type": {
+          "const": "user",
+          "default": "user",
+          "title": "User Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user",
+        "password",
+        "host",
+        "port",
+        "pgbouncer_host",
+        "pgbouncer_port"
+      ],
+      "title": "CrunchyPostgresUserCredentials",
+      "type": "object",
+      "x-description": "Configuration for Crunchy Postgres user credentials.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "integration",
+      "x-title": "Postgres User Credentials",
+      "x-type": "CrunchyPostgresUserCredentials"
+    },
     "CustomAuth": {
       "properties": {
         "type": {
@@ -83,6 +229,32 @@
       "x-meta-type": "inline",
       "x-title": "Custom Authentication",
       "x-type": "CustomAuth"
+    },
+    "DataBaseConfig": {
+      "properties": {
+        "database": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SQLiteDatabase"
+            },
+            {
+              "$ref": "#/$defs/PostgresDatabase"
+            }
+          ],
+          "title": "Database",
+          "x-description": "Configure the database for OpenWebUI. Choose between local SQLite or Postgres.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Database Configuration"
+        }
+      },
+      "title": "DataBaseConfig",
+      "type": "object",
+      "x-description": "Configure the database for OpenWebUI.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Database Configuration",
+      "x-type": "DataBaseConfig"
     },
     "IngressHttp": {
       "properties": {
@@ -113,54 +285,22 @@
       "x-title": "Enable HTTP Ingress",
       "x-type": "IngressHttp"
     },
-    "N8nDatabasePostgres": {
+    "MainApplicationConfig": {
       "properties": {
-        "storage_type": {
-          "const": "postgres",
-          "default": "postgres",
-          "title": "Storage Type",
-          "type": "string",
-          "x-description": "Storage type for N8n metadata.",
-          "x-is-advanced-field": false,
-          "x-meta-type": "inline",
-          "x-title": "Storage Type"
-        },
-        "postgres_uri": {
-          "$ref": "#/$defs/PostgresURI",
-          "x-description": "Connection URI to the PostgreSQL metadata database."
+        "preset": {
+          "$ref": "#/$defs/Preset"
         }
       },
       "required": [
-        "postgres_uri"
+        "preset"
       ],
-      "title": "N8nDatabasePostgres",
+      "title": "MainApplicationConfig",
       "type": "object",
-      "x-description": "Use PostgreSQL server as metadata storage for N8n.",
+      "x-description": "",
       "x-is-advanced-field": false,
       "x-meta-type": "inline",
-      "x-title": "Postgres",
-      "x-type": "N8nDatabasePostgres"
-    },
-    "N8nDatabaseSQLite": {
-      "properties": {
-        "storage_type": {
-          "const": "sqlite",
-          "default": "sqlite",
-          "title": "Storage Type",
-          "type": "string",
-          "x-description": "Storage type for N8n metadata.",
-          "x-is-advanced-field": false,
-          "x-meta-type": "inline",
-          "x-title": "Storage Type"
-        }
-      },
-      "title": "N8nDatabaseSQLite",
-      "type": "object",
-      "x-description": "Use SQLite on a dedicated block device as metadata store for N8n.",
-      "x-is-advanced-field": false,
-      "x-meta-type": "inline",
-      "x-title": "SQLite",
-      "x-type": "N8nDatabaseSQLite"
+      "x-title": "Main Application Configuration",
+      "x-type": "MainApplicationConfig"
     },
     "NoAuth": {
       "properties": {
@@ -179,6 +319,29 @@
       "x-meta-type": "inline",
       "x-title": "No Authentication",
       "x-type": "NoAuth"
+    },
+    "PostgresDatabase": {
+      "properties": {
+        "database_type": {
+          "const": "postgres",
+          "default": "postgres",
+          "title": "Database Type",
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/CrunchyPostgresUserCredentials"
+        }
+      },
+      "required": [
+        "credentials"
+      ],
+      "title": "PostgresDatabase",
+      "type": "object",
+      "x-description": "Use a Postgres database for OpenWebUI.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Postgres Database",
+      "x-type": "PostgresDatabase"
     },
     "PostgresURI": {
       "description": "Configuration for the Postgres connection URI.",
@@ -224,34 +387,92 @@
       "x-meta-type": "inline",
       "x-title": "Resource Preset",
       "x-type": "Preset"
+    },
+    "SQLiteDatabase": {
+      "properties": {
+        "database_type": {
+          "const": "sqlite",
+          "default": "sqlite",
+          "title": "Database Type",
+          "type": "string"
+        }
+      },
+      "title": "SQLiteDatabase",
+      "type": "object",
+      "x-description": "Use a local SQLite database for OpenWebUI.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "SQLite Database",
+      "x-type": "SQLiteDatabase"
+    },
+    "WebhookConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "replicas": {
+          "title": "Replicas",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preset",
+        "replicas"
+      ],
+      "title": "WebhookConfig",
+      "type": "object",
+      "x-description": "",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Webhook Configuration",
+      "x-type": "WebhookConfig"
+    },
+    "WorkerConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "replicas": {
+          "title": "Replicas",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preset",
+        "replicas"
+      ],
+      "title": "WorkerConfig",
+      "type": "object",
+      "x-description": "",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Worker Configuration",
+      "x-type": "WorkerConfig"
     }
   },
   "properties": {
-    "preset": {
-      "$ref": "#/$defs/Preset"
+    "main_app_config": {
+      "$ref": "#/$defs/MainApplicationConfig"
+    },
+    "worker_config": {
+      "$ref": "#/$defs/WorkerConfig"
+    },
+    "webhook_config": {
+      "$ref": "#/$defs/WebhookConfig"
     },
     "networking": {
       "$ref": "#/$defs/BasicNetworkingConfig",
       "x-description": "Configure network access, HTTP authentication, and related connectivity options."
     },
-    "database_type": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/N8nDatabaseSQLite"
-        },
-        {
-          "$ref": "#/$defs/N8nDatabasePostgres"
-        }
-      ],
-      "default": {
-        "storage_type": "sqlite",
-        "__type__": "N8nDatabaseSQLite"
-      },
-      "title": "Database Type"
+    "database_config": {
+      "$ref": "#/$defs/DataBaseConfig"
     }
   },
   "required": [
-    "preset"
+    "main_app_config",
+    "worker_config",
+    "webhook_config",
+    "database_config"
   ],
   "title": "N8nAppInputs",
   "type": "object"

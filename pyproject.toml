@@ -8,7 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
-    "apolo-app-types (>=25.11.0,<26.0.0)"
+    "apolo-app-types==25.11.1"
 ]
 
 

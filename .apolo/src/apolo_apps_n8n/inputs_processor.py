@@ -1,48 +1,76 @@
 import typing as t
 
-from yarl import URL
+from apolo_sdk import Client
 
-from apolo_app_types import (
-    ContainerImage,
-    CustomDeploymentInputs,
-)
 from apolo_app_types.app_types import AppType
 from apolo_app_types.helm.apps.base import BaseChartValueProcessor
-from apolo_app_types.helm.apps.custom_deployment import (
-    CustomDeploymentChartValueProcessor,
+from apolo_app_types.helm.apps.common import (
+    gen_extra_values,
+    get_preset,
+    preset_to_affinity,
+    preset_to_resources,
+    preset_to_tolerations,
 )
-from apolo_app_types.helm.utils.storage import get_app_data_files_path_url
-from apolo_app_types.protocols.common import (
-    ApoloFilesMount,
-    ApoloFilesPath,
-    ApoloMountMode,
-    Container,
-    Env,
-    MountPath,
-    StorageMounts,
-)
-from apolo_app_types.protocols.common.health_check import (
-    HealthCheck,
-    HealthCheckProbesConfig,
-    HTTPHealthCheckConfig,
-)
-from apolo_app_types.protocols.common.k8s import Port
-from apolo_app_types.protocols.custom_deployment import NetworkingConfig
-from apolo_app_types.protocols.shell import ShellAppInputs
+from apolo_app_types.protocols.common import Preset
+from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs
+from apolo_apps_n8n.db_utils import parse_postgres_connection_string
 
 
-class N8nAppChartValueProcessor(BaseChartValueProcessor[ShellAppInputs]):
+class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
     _port: int = 5678
 
-    def __init__(self, *args: t.Any, **kwargs: t.Any):
-        super().__init__(*args, **kwargs)
-        self.custom_dep_val_processor = CustomDeploymentChartValueProcessor(
-            *args, **kwargs
-        )
+    def __init__(self, client: Client, *args: t.Any, **kwargs: t.Any):
+        super().__init__(client, *args, **kwargs)
+
+    def get_database_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
+        db = input_.database_config.database
+        if db.database_type == DBTypes.SQLITE:
+            return {
+                "type": "sqlite",
+                "sqlite": {"pool_size": 1, "vacuum_on_startup": True},
+            }
+        if db.database_type == DBTypes.POSTGRES:
+            if not db.credentials.pgbouncer_uri:
+                err = "PostgreSQL database configuration requires a valid pgbouncer_uri"
+                raise ValueError(err)
+            return {
+                "type": "postgresdb",
+                "postgresdb": parse_postgres_connection_string(
+                    db.credentials.pgbouncer_uri
+                ),
+            }
+        err = "Invalid database configuration"
+        raise ValueError(err)
+
+    async def preset_to_values(self, preset: Preset) -> dict[str, t.Any]:
+        apolo_preset = get_preset(self.client, preset.name)
+        return {
+            "affinity": preset_to_affinity(apolo_preset),
+            "tolerations": await preset_to_tolerations(apolo_preset),
+            "resources": preset_to_resources(apolo_preset),
+        }
+
+    async def get_worker_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
+        config = input_.worker_config
+        return {
+            "service": {
+                "labels": {"service": "worker"},
+            },
+            **(await self.preset_to_values(config.preset)),
+        }
+
+    async def get_webhook_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
+        config = input_.webhook_config
+        return {
+            "service": {
+                "labels": {"service": "webhook"},
+            },
+            **(await self.preset_to_values(config.preset)),
+        }
 
     async def gen_extra_values(
         self,
-        input_: ShellAppInputs,
+        input_: N8nAppInputs,
         app_name: str,
         namespace: str,
         app_id: str,
@@ -54,76 +82,38 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[ShellAppInputs]):
         Generate extra Helm values for Shell configuration.
         """
 
-        base_app_storage_path = get_app_data_files_path_url(
-            client=self.client,
-            app_type_name="n8n",
-            app_name=app_name,
-        )
-        data_storage_path = base_app_storage_path
-        data_container_dir = URL("/home/node/.n8n")
+        # base_app_storage_path = get_app_data_files_path_url(
+        #     client=self.client,
+        #     app_type_name="n8n",
+        #     app_name=app_name,
+        # )
+        # data_storage_path = base_app_storage_path
+        # data_container_dir = URL("/home/node/.n8n")
 
-        env_vars: dict[str, t.Any] = {}
-
-        custom_deployment = CustomDeploymentInputs(
-            preset=input_.preset,
-            image=ContainerImage(
-                repository="n8nio/n8n",
-                tag="1.115.3",
-            ),
-            container=Container(
-                env=[Env(name=k, value=v) for k, v in env_vars.items()],
-            ),
-            networking=NetworkingConfig(
-                service_enabled=True,
-                ingress_http=input_.networking.ingress_http,
-                ports=[
-                    Port(name="http", port=self._port),
-                ],
-            ),
-            storage_mounts=StorageMounts(
-                mounts=[
-                    ApoloFilesMount(
-                        storage_uri=ApoloFilesPath(
-                            path=str(data_storage_path),
-                        ),
-                        mount_path=MountPath(path=str(data_container_dir)),
-                        mode=ApoloMountMode(mode="r"),
-                    ),
-                ]
-            ),
-            health_checks=HealthCheckProbesConfig(
-                liveness=HealthCheck(
-                    enabled=True,
-                    initial_delay=30,
-                    period_seconds=5,
-                    timeout=5,
-                    failure_threshold=20,
-                    health_check_config=HTTPHealthCheckConfig(
-                        path="/",
-                        port=self._port,
-                    ),
-                ),
-                readiness=HealthCheck(
-                    enabled=True,
-                    initial_delay=30,
-                    period_seconds=5,
-                    timeout=5,
-                    failure_threshold=20,
-                    health_check_config=HTTPHealthCheckConfig(
-                        path="/",
-                        port=self._port,
-                    ),
-                ),
-            ),
-        )
-
-        custom_app_vals = await self.custom_dep_val_processor.gen_extra_values(
-            input_=custom_deployment,
-            app_name=app_name,
-            namespace=namespace,
+        extra_values = await gen_extra_values(
             app_id=app_id,
-            app_secrets_name=app_secrets_name,
-            app_type=AppType.Shell,
+            app_type=AppType.N8n,
+            apolo_client=self.client,
+            preset_type=input_.main_app_config.preset,
+            namespace=namespace,
+            ingress_http=input_.networking.ingress_http,
         )
+        main_config = {
+            "resources": extra_values["resources"],
+            "tolerations": extra_values["tolerations"],
+            "affinity": extra_values["affinity"],
+            "podLabels": extra_values["podLabels"],
+            "config": {
+                "db": self.get_database_values(input_),
+            },
+            "service": {"labels": {"service": "main"}},
+        }
 
-        return {**custom_app_vals, "labels": {"application": "n8n"}}
+        return {
+            "apolo_app_id": extra_values["apolo_app_id"],
+            "ingress": extra_values["ingress"],
+            "main": main_config,
+            "worker": await self.get_worker_values(input_),
+            "webhook": await self.get_webhook_values(input_),
+            "labels": {"application": "n8n"},
+        }

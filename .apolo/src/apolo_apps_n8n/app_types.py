@@ -1,4 +1,4 @@
-import typing as t
+import enum
 from typing import Literal
 
 from pydantic import ConfigDict, Field
@@ -7,64 +7,99 @@ from apolo_app_types.protocols.common import (
     AbstractAppFieldType,
     AppInputs,
     AppOutputs,
-    BasicNetworkingConfig,
     Preset,
     SchemaExtraMetadata,
 )
-from apolo_app_types.protocols.postgres import PostgresURI
+from apolo_app_types.protocols.common.ingress import BasicNetworkingConfig
+from apolo_app_types.protocols.postgres import (
+    CrunchyPostgresUserCredentials,
+)
 
 
-class N8nDatabasePostgres(AbstractAppFieldType):
+class DBTypes(enum.StrEnum):
+    SQLITE = "sqlite"
+    POSTGRES = "postgres"
+
+
+class SQLiteDatabase(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="Postgres",
-            description="Use PostgreSQL server as metadata storage for N8n.",
+            title="SQLite Database",
+            description="Use a local SQLite database for OpenWebUI.",
         ).as_json_schema_extra(),
     )
-
-    storage_type: Literal["postgres"] = Field(
-        default="postgres",
-        json_schema_extra=SchemaExtraMetadata(
-            title="Storage Type",
-            description="Storage type for N8n metadata.",
-        ).as_json_schema_extra(),
-    )
-    postgres_uri: t.Annotated[
-        PostgresURI,
-        Field(
-            json_schema_extra=SchemaExtraMetadata(
-                title="Postgres URI",
-                description="Connection URI to the PostgreSQL metadata database.",
-            ).as_json_schema_extra()
-        ),
-    ]
+    # No additional fields needed for local SQLite database
+    database_type: Literal[DBTypes.SQLITE] = Field(default=DBTypes.SQLITE)
 
 
-class N8nDatabaseSQLite(AbstractAppFieldType):
+class PostgresDatabase(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="SQLite",
-            description="Use SQLite on a dedicated block "
-            "device as metadata store for N8n.",
+            title="Postgres Database",
+            description="Use a Postgres database for OpenWebUI.",
         ).as_json_schema_extra(),
     )
+    # Use Crunchy Postgres credentials for the database
+    database_type: Literal[DBTypes.POSTGRES] = Field(default=DBTypes.POSTGRES)
+    credentials: CrunchyPostgresUserCredentials
 
-    storage_type: Literal["sqlite"] = Field(
-        default="sqlite",
+
+class DataBaseConfig(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="Storage Type",
-            description="Storage type for N8n metadata.",
+            title="Database Configuration",
+            description="Configure the database for OpenWebUI.",
+        ).as_json_schema_extra(),
+    )
+    database: SQLiteDatabase | PostgresDatabase = Field(
+        default_factory=lambda: SQLiteDatabase(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Database Configuration",
+            description="Configure the database for OpenWebUI. "
+            "Choose between local SQLite or Postgres.",
         ).as_json_schema_extra(),
     )
 
 
-N8nStorage = N8nDatabaseSQLite | N8nDatabasePostgres
+class MainApplicationConfig(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Main Application Configuration", description=""
+        ).as_json_schema_extra(),
+    )
+    preset: Preset
+
+
+class WorkerConfig(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Worker Configuration", description=""
+        ).as_json_schema_extra(),
+    )
+    preset: Preset
+    replicas: int = Field()
+
+
+class WebhookConfig(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Webhook Configuration", description=""
+        ).as_json_schema_extra(),
+    )
+    preset: Preset
+    replicas: int = Field()
 
 
 class N8nAppInputs(AppInputs):
-    preset: Preset
+    main_app_config: MainApplicationConfig
+    worker_config: WorkerConfig
+    webhook_config: WebhookConfig
     networking: BasicNetworkingConfig = Field(
         default_factory=BasicNetworkingConfig,
         json_schema_extra=SchemaExtraMetadata(
@@ -73,7 +108,7 @@ class N8nAppInputs(AppInputs):
             " and related connectivity options.",
         ).as_json_schema_extra(),
     )
-    database_type: N8nStorage = Field(default=N8nDatabaseSQLite())
+    database_config: DataBaseConfig
 
 
 class N8nAppOutputs(AppOutputs):
