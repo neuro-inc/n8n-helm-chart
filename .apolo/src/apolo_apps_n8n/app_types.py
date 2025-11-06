@@ -27,7 +27,7 @@ class SQLiteDatabase(AbstractAppFieldType):
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
             title="SQLite Database",
-            description="Use a local SQLite database for OpenWebUI.",
+            description="Use a local SQLite database for n8n.",
         ).as_json_schema_extra(),
     )
     # No additional fields needed for local SQLite database
@@ -39,7 +39,7 @@ class PostgresDatabase(AbstractAppFieldType):
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
             title="Postgres Database",
-            description="Use a Postgres database for OpenWebUI.",
+            description="Use a Postgres database for n8n.",
         ).as_json_schema_extra(),
     )
     # Use Crunchy Postgres credentials for the database
@@ -52,14 +52,14 @@ class DataBaseConfig(AbstractAppFieldType):
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
             title="Database Configuration",
-            description="Configure the database for OpenWebUI.",
+            description="Configure the database for n8n.",
         ).as_json_schema_extra(),
     )
     database: SQLiteDatabase | PostgresDatabase = Field(
         default_factory=lambda: SQLiteDatabase(),
         json_schema_extra=SchemaExtraMetadata(
             title="Database Configuration",
-            description="Configure the database for OpenWebUI. "
+            description="Configure the database for n8n. "
             "Choose between local SQLite or Postgres.",
         ).as_json_schema_extra(),
     )
