@@ -121,10 +121,72 @@ class WebhookConfig(AbstractAppFieldType):
     )
 
 
+class ValkeyArchitectureTypes(enum.StrEnum):
+    STANDALONE = "standalone"
+    REPLICATION = "replication"
+
+
+class ValkeyArchitecture(AbstractAppFieldType):
+    pass
+
+
+class ValkeyStandaloneArchitecture(ValkeyArchitecture):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Standalone Mode",
+            description="""This mode wiill deploy a standalone
+                    Valkey StatefulSet. A single service will be exposed""",
+        ).as_json_schema_extra(),
+    )
+    architecture_type: Literal[ValkeyArchitectureTypes.STANDALONE]
+
+
+class ValkeyReplicationArchitecture(ValkeyArchitecture):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Replication Mode",
+            description="""This mode will deploy a Valkey
+                    primary StatefulSet and a Valkey replicas StatefulSet.
+                    The replicas will be read-replicas of the primary and
+                    two services will be exposed""",
+        ).as_json_schema_extra(),
+    )
+    architecture_type: Literal[ValkeyArchitectureTypes.REPLICATION]
+    replica_preset: Preset = Field(
+        ...,
+        json_schema_extra=SchemaExtraMetadata(title="Replica Preset", description=""),
+    )
+    autoscaling: AutoscalingHPA | None = Field(
+        default=None,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Autoscaling",
+            description="Enable Autoscaling and configure it.",
+            is_advanced_field=True,
+        ).as_json_schema_extra(),
+    )
+
+
+ValkeyArchs = ValkeyStandaloneArchitecture | ValkeyReplicationArchitecture
+
+
+class ValkeyConfig(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Valkey/Redis Configuration", description=""
+        ).as_json_schema_extra(),
+    )
+    preset: Preset
+    architecture: ValkeyArchs
+
+
 class N8nAppInputs(AppInputs):
     main_app_config: MainApplicationConfig
     worker_config: WorkerConfig
     webhook_config: WebhookConfig
+    valkey_config: ValkeyConfig
     networking: BasicNetworkingConfig = Field(
         default_factory=BasicNetworkingConfig,
         json_schema_extra=SchemaExtraMetadata(

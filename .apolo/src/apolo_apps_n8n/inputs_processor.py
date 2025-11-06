@@ -12,7 +12,7 @@ from apolo_app_types.helm.apps.common import (
     preset_to_tolerations,
 )
 from apolo_app_types.protocols.common import AutoscalingHPA, Preset
-from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs
+from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs, ValkeyArchitectureTypes
 from apolo_apps_n8n.db_utils import parse_postgres_connection_string
 
 
@@ -87,6 +87,36 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             ),
         }
 
+    async def get_redis_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
+        config = input_.valkey_config
+        values = {
+            "enabled": True,
+            "architecture": str(config.architecture.architecture_type.value),
+            "primary": {
+                **(await self.preset_to_values(config.preset)),
+            },
+        }
+
+        if config.architecture.architecture_type == ValkeyArchitectureTypes.REPLICATION:
+            replica_values = await self.preset_to_values(
+                config.architecture.replica_preset
+            )
+            values["replica"] = {**replica_values}
+            if autoscaling := config.architecture.autoscaling:
+                values["replica"]["autoscaling"] = {
+                    "hpa": {
+                        "enabled": True,
+                        "minReplicas": autoscaling.min_replicas,
+                        "maxReplicas": autoscaling.max_replicas,
+                        # adding keys manually because they differ from main app
+                        "targetCPU": (autoscaling.target_cpu_utilization_percentage),
+                        "targetMemory": (
+                            autoscaling.target_memory_utilization_percentage
+                        ),
+                    }
+                }
+        return values
+
     async def gen_extra_values(
         self,
         input_: N8nAppInputs,
@@ -131,11 +161,16 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             main_config["autoscaling"] = self.get_autoscaling_values(
                 input_.main_app_config.autoscaling
             )
+        ingress = extra_values["ingress"]
+        for i, host in enumerate(ingress["hosts"]):
+            paths = host["paths"]
+            ingress["hosts"][i]["paths"] = [p["path"] for p in paths]
         return {
             "apolo_app_id": extra_values["apolo_app_id"],
-            "ingress": extra_values["ingress"],
+            "ingress": ingress,
             "main": main_config,
             "worker": await self.get_worker_values(input_),
             "webhook": await self.get_webhook_values(input_),
+            "valkey": await self.get_redis_values(input_),
             "labels": {"application": "n8n"},
         }

@@ -11,12 +11,16 @@ from apolo_apps_n8n.app_types import (
     N8nAppInputs,
     PostgresDatabase,
     SQLiteDatabase,
+    ValkeyArchitectureTypes,
+    ValkeyConfig,
+    ValkeyReplicationArchitecture,
+    ValkeyStandaloneArchitecture,
     WebhookConfig,
     WorkerConfig,
 )
 from apolo_apps_n8n.inputs_processor import N8nAppChartValueProcessor
 
-from apolo_app_types.protocols.common import Preset
+from apolo_app_types.protocols.common import AutoscalingHPA, Preset
 from apolo_app_types.protocols.common.ingress import BasicNetworkingConfig
 from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 
@@ -28,6 +32,12 @@ def basic_n8n_inputs():
         main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
         worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
         webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
         networking=BasicNetworkingConfig(),
         database_config=DataBaseConfig(
             database=SQLiteDatabase(database_type=DBTypes.SQLITE)
@@ -42,6 +52,12 @@ def postgres_n8n_inputs():
         main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
         worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
         webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
         networking=BasicNetworkingConfig(),
         database_config=DataBaseConfig(
             database=PostgresDatabase(
@@ -80,6 +96,7 @@ async def test_n8n_values_generation_with_sqlite(
     assert "main" in helm_params
     assert "worker" in helm_params
     assert "webhook" in helm_params
+    assert "valkey" in helm_params
     assert "labels" in helm_params
 
     # Verify labels
@@ -119,6 +136,15 @@ async def test_n8n_values_generation_with_sqlite(
     assert "resources" in webhook_config
     assert "tolerations" in webhook_config
     assert "affinity" in webhook_config
+
+    # Verify valkey configuration (standalone mode)
+    valkey_config = helm_params["valkey"]
+    assert valkey_config["enabled"] is True
+    assert valkey_config["architecture"] == "standalone"
+    assert "primary" in valkey_config
+    assert "resources" in valkey_config["primary"]
+    assert "tolerations" in valkey_config["primary"]
+    assert "affinity" in valkey_config["primary"]
 
 
 async def test_n8n_values_generation_with_postgres(
@@ -161,6 +187,12 @@ async def test_database_config_without_pgbouncer_uri(
         main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
         worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
         webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
         networking=BasicNetworkingConfig(),
         database_config=DataBaseConfig(
             database=PostgresDatabase(
@@ -204,6 +236,12 @@ async def test_database_config_with_empty_pgbouncer_uri(
         main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
         worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
         webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
         networking=BasicNetworkingConfig(),
         database_config=DataBaseConfig(
             database=PostgresDatabase(
@@ -233,3 +271,107 @@ async def test_database_config_with_empty_pgbouncer_uri(
             app_secrets_name=APP_SECRETS_NAME,
             app_id=APP_ID,
         )
+
+
+async def test_valkey_replication_without_autoscaling(
+    setup_clients, mock_get_preset_cpu
+):
+    """Test Valkey replication mode without autoscaling."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyReplicationArchitecture(
+                architecture_type=ValkeyArchitectureTypes.REPLICATION,
+                replica_preset=Preset(name="cpu-small"),
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify valkey replication configuration
+    valkey_config = helm_params["valkey"]
+    assert valkey_config["enabled"] is True
+    assert valkey_config["architecture"] == "replication"
+    assert "primary" in valkey_config
+    assert "replica" in valkey_config
+
+    # Verify primary configuration
+    assert "resources" in valkey_config["primary"]
+    assert "tolerations" in valkey_config["primary"]
+    assert "affinity" in valkey_config["primary"]
+
+    # Verify replica configuration
+    assert "resources" in valkey_config["replica"]
+    assert "tolerations" in valkey_config["replica"]
+    assert "affinity" in valkey_config["replica"]
+
+    # Verify autoscaling is not present when not configured
+    assert "autoscaling" not in valkey_config["replica"]
+
+
+async def test_valkey_replication_with_autoscaling(setup_clients, mock_get_preset_cpu):
+    """Test Valkey replication mode with autoscaling enabled."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyReplicationArchitecture(
+                architecture_type=ValkeyArchitectureTypes.REPLICATION,
+                replica_preset=Preset(name="cpu-small"),
+                autoscaling=AutoscalingHPA(
+                    min_replicas=2,
+                    max_replicas=10,
+                    target_cpu_utilization_percentage=70,
+                    target_memory_utilization_percentage=80,
+                ),
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify valkey replication configuration with autoscaling
+    valkey_config = helm_params["valkey"]
+    assert valkey_config["enabled"] is True
+    assert valkey_config["architecture"] == "replication"
+
+    # Verify autoscaling configuration
+    assert "autoscaling" in valkey_config["replica"]
+    hpa_config = valkey_config["replica"]["autoscaling"]["hpa"]
+    assert hpa_config["enabled"] is True
+    assert hpa_config["minReplicas"] == 2
+    assert hpa_config["maxReplicas"] == 10
+    assert hpa_config["targetCPU"] == 70
+    assert hpa_config["targetMemory"] == 80
