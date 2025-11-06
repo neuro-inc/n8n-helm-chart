@@ -19,6 +19,7 @@ image:
   tag: ""
 imagePullSecrets: []
 
+labels: {}
 # The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
 nameOverride:
 # Override the full name of the deployment. When empty, the name will be "{release-name}-{chart-name}" or the value of nameOverride if specified
