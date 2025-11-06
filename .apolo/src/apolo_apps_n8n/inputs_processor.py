@@ -90,7 +90,8 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
     async def get_redis_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.valkey_config
         values = {
-            "image": "bitnamilegacy/valkey",
+            "global": {"security": {"allowInsecureImages": True}},
+            "image": {"repository": "bitnamilegacy/valkey"},
             "enabled": True,
             "architecture": str(config.architecture.architecture_type.value),
             "primary": {
