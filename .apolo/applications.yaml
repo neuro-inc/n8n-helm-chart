@@ -2,19 +2,19 @@
   name: n8n
   title: n8n
   install_type: workflow
-  helm_path: charts/custom-deployment
+  helm_path: charts/n8n
   app_package_name: apolo_apps_n8n
   inputs:
     schema_path: .apolo/src/apolo_apps_n8n/schemas/N8nAppInputs.json
     types_name: N8nAppInputs
     processor: N8nAppChartValueProcessor
-    image: ghcr.io/neuro-inc/mlops-custom-deployment-app
+    image: ghcr.io/neuro-inc/n8n-hook
   outputs:
     schema_path: .apolo/src/apolo_apps_n8n/schemas/N8nAppOutputs.json
     types_name: N8nAppOutputs
     processor: N8nAppOutputProcessor
-    image: ghcr.io/neuro-inc/mlops-custom-deployment-app
-  short_description: Deploy scalable applications
+    image: ghcr.io/neuro-inc/n8n-hook
+  short_description: Workflow automation with AI
   description: |
     N8n App allows you to automate workflows by connecting various services and applications.
     With its user-friendly interface, you can create complex automation sequences without coding,
