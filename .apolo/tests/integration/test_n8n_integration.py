@@ -31,6 +31,30 @@ from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 CHART_PATH = Path(__file__).parent.parent.parent.parent / "charts" / "n8n"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _build_helm_dependencies():
+    """Build helm dependencies once per test session."""
+    import subprocess
+
+    # Check if helm is available
+    if os.system("which helm > /dev/null 2>&1") != 0:
+        pytest.skip("helm not installed")
+        return
+
+    # Build helm dependencies
+    result = subprocess.run(
+        ["helm", "dependency", "build", str(CHART_PATH)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        pytest.fail(
+            f"Failed to build helm dependencies: {result.stderr}\n{result.stdout}"
+        )
+
+
 @pytest.fixture
 def chart_path():
     """Get the path to the helm chart."""

@@ -101,9 +101,10 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             replica_values = await self.preset_to_values(
                 config.architecture.replica_preset
             )
-            values["replica"] = {**replica_values}
+            replica_config: dict[str, t.Any] = {**replica_values}
+
             if autoscaling := config.architecture.autoscaling:
-                values["replica"]["autoscaling"] = {
+                replica_config["autoscaling"] = {
                     "hpa": {
                         "enabled": True,
                         "minReplicas": autoscaling.min_replicas,
@@ -115,6 +116,8 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                         ),
                     }
                 }
+
+            values["replica"] = replica_config
         return values
 
     async def gen_extra_values(
