@@ -34,6 +34,7 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "n8n.labels" -}}
+application: {{ .Values.labels.application }}
 helm.sh/chart: {{ include "n8n.chart" . }}
 {{ include "n8n.selectorLabels" . }}
 {{- if .Values.apolo_app_id }}
