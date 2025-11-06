@@ -156,7 +156,9 @@ class ValkeyReplicationArchitecture(ValkeyArchitecture):
     architecture_type: Literal[ValkeyArchitectureTypes.REPLICATION]
     replica_preset: Preset = Field(
         ...,
-        json_schema_extra=SchemaExtraMetadata(title="Replica Preset", description=""),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Replica Preset", description=""
+        ).as_json_schema_extra(),
     )
     autoscaling: AutoscalingHPA | None = Field(
         default=None,
