@@ -17,7 +17,7 @@ class N8nAppOutputProcessor(BaseAppOutputsProcessor[N8nAppOutputs]):
         helm_values: dict[str, t.Any],
         app_instance_id: str,
     ) -> N8nAppOutputs:
-        labels = {"application": "n8n8", INSTANCE_LABEL: app_instance_id}
+        labels = {"application": "n8n", INSTANCE_LABEL: app_instance_id}
         (
             internal_web_app_url,
             external_web_app_url,
