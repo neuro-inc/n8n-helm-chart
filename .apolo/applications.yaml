@@ -22,7 +22,7 @@
   pub_date: "2025-01-01T00:00:00+00:00"
   changelog:
     file: ./CHANGELOG.md
-  tags: ["Apolo"]
+  tags: ["Agent", "Workflow"]
   urls:
     - name: Apolo Service Deployment documentation
       type: documentation
