@@ -364,10 +364,10 @@
             "__type__": "ReplicaCount"
           },
           "title": "Replica Scaling",
-          "x-description": "Enable Autoscaling for web server",
-          "x-is-advanced-field": true,
+          "x-description": "Choose a fixed number of replicas or enable autoscaling.",
+          "x-is-advanced-field": false,
           "x-meta-type": "inline",
-          "x-title": "Autoscaling"
+          "x-title": "Replicas"
         }
       },
       "required": [

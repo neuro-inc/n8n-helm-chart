@@ -97,9 +97,8 @@ class MainApplicationConfig(AbstractAppFieldType):
     replica_scaling: ReplicaCount | AutoscalingHPA = Field(
         default=ReplicaCount(replicas=1),
         json_schema_extra=SchemaExtraMetadata(
-            title="Autoscaling",
-            description="Enable Autoscaling for web server",
-            is_advanced_field=True,
+            title="Replicas",
+            description="Choose a fixed number of replicas or " "enable autoscaling.",
         ).as_json_schema_extra(),
     )
 
