@@ -23,6 +23,11 @@
   changelog:
     file: ./CHANGELOG.md
   tags: ["Agent", "Workflow"]
+  logo: "https://storage.googleapis.com/development-421920-assets/app-logos/n8n-logo.svg"
+  assets:
+    - type: image
+      url: "https://storage.googleapis.com/development-421920-assets/app-logos/n8n-banner.svg"
+
   urls:
     - name: n8n Documentation
       type: documentation
