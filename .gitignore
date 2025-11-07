@@ -6,3 +6,5 @@ yamls
 .vscode
 .DS_Store
 __pycache__/
+.coverage
+.coverage*.xml
