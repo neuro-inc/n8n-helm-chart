@@ -24,6 +24,6 @@
     file: ./CHANGELOG.md
   tags: ["Agent", "Workflow"]
   urls:
-    - name: Apolo Service Deployment documentation
+    - name: n8n Documentation
       type: documentation
-      url: https://docs.apolo.us/index/apolo-console/apps/available-apps
+      url: https://docs.n8n.io/
