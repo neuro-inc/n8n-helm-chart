@@ -364,7 +364,7 @@
             "__type__": "ReplicaCount"
           },
           "title": "Replica Scaling",
-          "x-description": "Enable Autoscaling and configure it.",
+          "x-description": "Enable Autoscaling for web server",
           "x-is-advanced-field": true,
           "x-meta-type": "inline",
           "x-title": "Autoscaling"

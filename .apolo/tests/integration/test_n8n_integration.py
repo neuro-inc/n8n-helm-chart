@@ -87,7 +87,7 @@ def inputs_with_valkey_replication():
     return N8nAppInputs(
         main_app_config=MainApplicationConfig(
             preset=Preset(name="cpu-small"),
-            autoscaling=AutoscalingHPA(
+            replica_scaling=AutoscalingHPA(
                 min_replicas=1,
                 max_replicas=5,
                 target_cpu_utilization_percentage=80,

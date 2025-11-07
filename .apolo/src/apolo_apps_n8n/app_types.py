@@ -95,7 +95,7 @@ class MainApplicationConfig(AbstractAppFieldType):
         default=ReplicaCount(replicas=1),
         json_schema_extra=SchemaExtraMetadata(
             title="Autoscaling",
-            description="Enable Autoscaling and configure it.",
+            description="Enable Autoscaling for web server",
             is_advanced_field=True,
         ).as_json_schema_extra(),
     )
