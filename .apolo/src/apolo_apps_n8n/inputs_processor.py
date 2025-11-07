@@ -6,10 +6,8 @@ from apolo_app_types.app_types import AppType
 from apolo_app_types.helm.apps.base import BaseChartValueProcessor
 from apolo_app_types.helm.apps.common import (
     gen_extra_values,
+    get_component_values,
     get_preset,
-    preset_to_affinity,
-    preset_to_resources,
-    preset_to_tolerations,
 )
 from apolo_app_types.protocols.common import AutoscalingHPA, Preset
 from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs, ValkeyArchitectureTypes
@@ -44,11 +42,10 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
 
     async def preset_to_values(self, preset: Preset) -> dict[str, t.Any]:
         apolo_preset = get_preset(self.client, preset.name)
-        return {
-            "affinity": preset_to_affinity(apolo_preset),
-            "tolerations": await preset_to_tolerations(apolo_preset),
-            "resources": preset_to_resources(apolo_preset),
-        }
+        values = await get_component_values(apolo_preset, preset.name)
+        values["podLabels"] = values["labels"]
+        values["deploymentLabels"] = values["labels"]
+        return values
 
     async def get_worker_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.worker_config
