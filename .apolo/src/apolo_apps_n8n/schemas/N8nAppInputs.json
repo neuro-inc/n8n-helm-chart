@@ -350,16 +350,20 @@
         "preset": {
           "$ref": "#/$defs/Preset"
         },
-        "autoscaling": {
+        "replica_scaling": {
           "anyOf": [
             {
-              "$ref": "#/$defs/AutoscalingHPA"
+              "$ref": "#/$defs/ReplicaCount"
             },
             {
-              "type": "null"
+              "$ref": "#/$defs/AutoscalingHPA"
             }
           ],
-          "default": null,
+          "default": {
+            "replicas": 1,
+            "__type__": "ReplicaCount"
+          },
+          "title": "Replica Scaling",
           "x-description": "Enable Autoscaling and configure it.",
           "x-is-advanced-field": true,
           "x-meta-type": "inline",
@@ -462,6 +466,26 @@
       "x-meta-type": "inline",
       "x-title": "Resource Preset",
       "x-type": "Preset"
+    },
+    "ReplicaCount": {
+      "properties": {
+        "replicas": {
+          "default": 1,
+          "title": "Replicas",
+          "type": "integer",
+          "x-description": "Number of replicas created for main application.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Replica Count"
+        }
+      },
+      "title": "ReplicaCount",
+      "type": "object",
+      "x-description": "This option create a fixed number of replicas with no autoscaling enabled.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Fixed Replica Count",
+      "x-type": "ReplicaCount"
     },
     "SQLiteDatabase": {
       "properties": {
@@ -576,21 +600,6 @@
         "replicas": {
           "title": "Replicas",
           "type": "integer"
-        },
-        "autoscaling": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/AutoscalingHPA"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "x-description": "Enable Autoscaling and configure it.",
-          "x-is-advanced-field": true,
-          "x-meta-type": "inline",
-          "x-title": "Autoscaling"
         }
       },
       "required": [
@@ -613,21 +622,6 @@
         "replicas": {
           "title": "Replicas",
           "type": "integer"
-        },
-        "autoscaling": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/AutoscalingHPA"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "x-description": "Enable Autoscaling and configure it.",
-          "x-is-advanced-field": true,
-          "x-meta-type": "inline",
-          "x-title": "Autoscaling"
         }
       },
       "required": [

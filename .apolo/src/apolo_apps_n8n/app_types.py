@@ -65,6 +65,24 @@ class DataBaseConfig(AbstractAppFieldType):
     )
 
 
+class ReplicaCount(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Fixed Replica Count",
+            description="This option create a fixed number of replicas "
+            "with no autoscaling enabled.",
+        ).as_json_schema_extra(),
+    )
+    replicas: int = Field(
+        default=1,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Replica Count",
+            description="Number of replicas created for main application.",
+        ).as_json_schema_extra(),
+    )
+
+
 class MainApplicationConfig(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
@@ -73,8 +91,8 @@ class MainApplicationConfig(AbstractAppFieldType):
         ).as_json_schema_extra(),
     )
     preset: Preset
-    autoscaling: AutoscalingHPA | None = Field(
-        default=None,
+    replica_scaling: ReplicaCount | AutoscalingHPA = Field(
+        default=ReplicaCount(replicas=1),
         json_schema_extra=SchemaExtraMetadata(
             title="Autoscaling",
             description="Enable Autoscaling and configure it.",
@@ -92,14 +110,6 @@ class WorkerConfig(AbstractAppFieldType):
     )
     preset: Preset
     replicas: int = Field()
-    autoscaling: AutoscalingHPA | None = Field(
-        default=None,
-        json_schema_extra=SchemaExtraMetadata(
-            title="Autoscaling",
-            description="Enable Autoscaling and configure it.",
-            is_advanced_field=True,
-        ).as_json_schema_extra(),
-    )
 
 
 class WebhookConfig(AbstractAppFieldType):
@@ -111,14 +121,6 @@ class WebhookConfig(AbstractAppFieldType):
     )
     preset: Preset
     replicas: int = Field()
-    autoscaling: AutoscalingHPA | None = Field(
-        default=None,
-        json_schema_extra=SchemaExtraMetadata(
-            title="Autoscaling",
-            description="Enable Autoscaling and configure it.",
-            is_advanced_field=True,
-        ).as_json_schema_extra(),
-    )
 
 
 class ValkeyArchitectureTypes(enum.StrEnum):

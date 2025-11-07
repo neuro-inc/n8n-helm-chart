@@ -49,27 +49,23 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
 
     async def get_worker_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.worker_config
-        values = {
+        return {
             "service": {
                 "labels": {"service": "worker"},
             },
+            "replicaCount": config.replicas,
             **(await self.preset_to_values(config.preset)),
         }
-        if config.autoscaling:
-            values["autoscaling"] = self.get_autoscaling_values(config.autoscaling)
-        return values
 
     async def get_webhook_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
         config = input_.webhook_config
-        values = {
+        return {
             "service": {
                 "labels": {"service": "webhook"},
             },
+            "replicaCount": config.replicas,
             **(await self.preset_to_values(config.preset)),
         }
-        if config.autoscaling:
-            values["autoscaling"] = self.get_autoscaling_values(config.autoscaling)
-        return values
 
     def get_autoscaling_values(self, autoscaling: AutoscalingHPA) -> dict[str, t.Any]:
         return {
@@ -159,10 +155,15 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             },
             "service": {"labels": {"service": "main"}},
         }
-        if input_.main_app_config.autoscaling:
+        if isinstance(input_.main_app_config.replica_scaling, AutoscalingHPA):
             main_config["autoscaling"] = self.get_autoscaling_values(
-                input_.main_app_config.autoscaling
+                input_.main_app_config.replica_scaling
             )
+        else:
+            main_config["replicaCount"] = (
+                input_.main_app_config.replica_scaling.replicas
+            )
+
         ingress = extra_values["ingress"]
         for i, host in enumerate(ingress["hosts"]):
             paths = host["paths"]
