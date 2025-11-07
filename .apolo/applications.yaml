@@ -19,7 +19,7 @@
     N8n App allows you to automate workflows by connecting various services and applications.
     With its user-friendly interface, you can create complex automation sequences without coding,
     enhancing productivity and efficiency across your projects.
-  pub_date: "2025-01-01T00:00:00+00:00"
+  pub_date: "2025-11-07T00:00:00+00:00"
   changelog:
     file: ./CHANGELOG.md
   tags: ["Agent", "Workflow"]
