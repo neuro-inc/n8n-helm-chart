@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13
 
 LABEL org.opencontainers.image.source="https://github.com/neuro-inc/n8n-helm-chart"
 
