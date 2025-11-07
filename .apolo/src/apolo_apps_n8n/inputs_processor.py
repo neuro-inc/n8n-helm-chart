@@ -100,6 +100,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
 
             if autoscaling := config.architecture.autoscaling:
                 replica_config["autoscaling"] = {
+                    "enabled": True,
                     "hpa": {
                         "enabled": True,
                         "minReplicas": autoscaling.min_replicas,
@@ -109,7 +110,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                         "targetMemory": (
                             autoscaling.target_memory_utilization_percentage
                         ),
-                    }
+                    },
                 }
 
             values["replica"] = replica_config
