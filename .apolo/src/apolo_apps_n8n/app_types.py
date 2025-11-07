@@ -3,8 +3,10 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 
+from apolo_app_types.helm.utils.storage import get_app_data_files_relative_path_url
 from apolo_app_types.protocols.common import (
     AbstractAppFieldType,
+    ApoloFilesPath,
     AppInputs,
     AppOutputs,
     AutoscalingHPA,
@@ -83,6 +85,39 @@ class ReplicaCount(AbstractAppFieldType):
     )
 
 
+class N8nVolume(AbstractAppFieldType):
+    model_config = ConfigDict(
+        protected_namespaces=(),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Persistent Storage",
+            description=(
+                "Configure persistent storage for the n8n data directory. "
+                "With SQLite, this stores all data including workflows and "
+                "credentials. With PostgreSQL, workflows and credentials are "
+                "stored in the database, while this volume stores encryption "
+                "keys, instance logs, and source control assets."
+            ),
+        ).as_json_schema_extra(),
+    )
+    storage_mount: ApoloFilesPath = Field(
+        default=ApoloFilesPath(
+            path=str(
+                get_app_data_files_relative_path_url(
+                    app_type_name="n8n", app_name="n8n-app"
+                )
+            )
+        ),
+        json_schema_extra=SchemaExtraMetadata(
+            title="Storage Mount Path",
+            description=(
+                "Select a platform storage path to mount for the n8n data "
+                "directory. This is required for both SQLite and PostgreSQL "
+                "deployments to persist critical data."
+            ),
+        ).as_json_schema_extra(),
+    )
+
+
 class MainApplicationConfig(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
@@ -101,6 +136,7 @@ class MainApplicationConfig(AbstractAppFieldType):
             description="Choose a fixed number of replicas or " "enable autoscaling.",
         ).as_json_schema_extra(),
     )
+    persistence: N8nVolume | None = Field(default=N8nVolume())
 
 
 class WorkerConfig(AbstractAppFieldType):

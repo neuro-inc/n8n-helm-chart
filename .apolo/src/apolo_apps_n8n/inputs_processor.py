@@ -2,14 +2,25 @@ import typing as t
 
 from apolo_sdk import Client
 
+from apolo_app_types import ApoloFilesMount
 from apolo_app_types.app_types import AppType
 from apolo_app_types.helm.apps.base import BaseChartValueProcessor
 from apolo_app_types.helm.apps.common import (
+    append_apolo_storage_integration_annotations,
+    gen_apolo_storage_integration_labels,
     gen_extra_values,
     get_component_values,
     get_preset,
 )
-from apolo_app_types.protocols.common import AutoscalingHPA, Preset
+from apolo_app_types.protocols.common import (
+    AutoscalingHPA,
+    Preset,
+)
+from apolo_app_types.protocols.common.storage import (
+    ApoloMountMode,
+    ApoloMountModes,
+    MountPath,
+)
 from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs, ValkeyArchitectureTypes
 from apolo_apps_n8n.db_utils import parse_postgres_connection_string
 
@@ -169,6 +180,32 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
         for i, host in enumerate(ingress["hosts"]):
             paths = host["paths"]
             ingress["hosts"][i]["paths"] = [p["path"] for p in paths]
+
+        # storage
+        if input_.main_app_config.persistence:
+            persistence = input_.main_app_config.persistence
+            file_mount = ApoloFilesMount(
+                storage_uri=persistence.storage_mount,
+                mount_path=MountPath(path="/home/node/.n8n"),
+                mode=ApoloMountMode(mode=ApoloMountModes.RW),
+            )
+            storage_annotations = append_apolo_storage_integration_annotations(
+                main_config.get("podAnnotations", {}), [file_mount], client=self.client
+            )
+
+            if storage_annotations:
+                main_config["podAnnotations"] = (
+                    main_config.get("podAnnotations", {}) | storage_annotations
+                )
+
+            storage_labels = gen_apolo_storage_integration_labels(
+                client=self.client, inject_storage=True
+            )
+            if storage_labels:
+                main_config["podLabels"] = (
+                    main_config.get("podLabels", {}) | storage_labels
+                )
+
         return {
             "apolo_app_id": extra_values["apolo_app_id"],
             "ingress": ingress,

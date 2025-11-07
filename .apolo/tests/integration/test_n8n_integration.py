@@ -12,6 +12,7 @@ from apolo_apps_n8n.app_types import (
     DBTypes,
     MainApplicationConfig,
     N8nAppInputs,
+    N8nVolume,
     PostgresDatabase,
     SQLiteDatabase,
     ValkeyArchitectureTypes,
@@ -23,7 +24,7 @@ from apolo_apps_n8n.app_types import (
 )
 from apolo_apps_n8n.inputs_processor import N8nAppChartValueProcessor
 
-from apolo_app_types.protocols.common import AutoscalingHPA, Preset
+from apolo_app_types.protocols.common import ApoloFilesPath, AutoscalingHPA, Preset
 from apolo_app_types.protocols.common.ingress import BasicNetworkingConfig
 from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 
@@ -332,6 +333,176 @@ async def test_helm_lint_with_generated_values(
         assert (
             process.returncode == 0
         ), f"helm lint failed: {stderr.decode()}\n{stdout.decode()}"
+
+    finally:
+        values_path.unlink()
+
+
+@pytest.fixture
+def inputs_with_persistence_none():
+    """Create N8nAppInputs with persistence=None."""
+    return N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"), persistence=None
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+
+@pytest.fixture
+def inputs_with_custom_persistence_path():
+    """Create N8nAppInputs with custom persistence path."""
+    return N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"),
+            persistence=N8nVolume(
+                storage_mount=ApoloFilesPath(
+                    path="storage://test-cluster/custom/n8n/data"
+                )
+            ),
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+
+@pytest.mark.skipif(
+    os.system("which helm > /dev/null 2>&1") != 0,
+    reason="helm not installed",
+)
+async def test_helm_template_with_persistence_none(
+    setup_clients, mock_get_preset_cpu, inputs_with_persistence_none, chart_path
+):
+    """Test that helm template works with persistence=None."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    # Generate helm values
+    helm_values = await input_processor.gen_extra_values(
+        input_=inputs_with_persistence_none,
+        app_name="n8n-test",
+        namespace="test-namespace",
+        app_secrets_name="test-secret",
+        app_id="test-app-id",
+    )
+
+    # Write values to temp file
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as values_file:
+        yaml.dump(helm_values, values_file)
+        values_path = Path(values_file.name)
+
+    try:
+        # Run helm template
+        process = await asyncio.create_subprocess_exec(
+            "helm",
+            "template",
+            "test-release",
+            str(chart_path),
+            "-f",
+            str(values_path),
+            "--namespace",
+            "test-namespace",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await process.communicate()
+
+        # Check that helm template succeeded
+        assert process.returncode == 0, f"helm template failed: {stderr.decode()}"
+
+        # Verify the output contains valid YAML
+        manifests = list(yaml.safe_load_all(stdout.decode()))
+        assert len(manifests) > 0, "No manifests generated"
+
+        # Verify we have expected resources
+        resource_kinds = {m.get("kind") for m in manifests if m}
+        assert "Deployment" in resource_kinds or "StatefulSet" in resource_kinds
+        assert "Service" in resource_kinds
+
+    finally:
+        values_path.unlink()
+
+
+@pytest.mark.skipif(
+    os.system("which helm > /dev/null 2>&1") != 0,
+    reason="helm not installed",
+)
+async def test_helm_template_with_custom_persistence_path(
+    setup_clients,
+    mock_get_preset_cpu,
+    inputs_with_custom_persistence_path,
+    chart_path,
+):
+    """Test that helm template works with custom persistence path."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    # Generate helm values
+    helm_values = await input_processor.gen_extra_values(
+        input_=inputs_with_custom_persistence_path,
+        app_name="n8n-test",
+        namespace="test-namespace",
+        app_secrets_name="test-secret",
+        app_id="test-app-id",
+    )
+
+    # Write values to temp file
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as values_file:
+        yaml.dump(helm_values, values_file)
+        values_path = Path(values_file.name)
+
+    try:
+        # Run helm template
+        process = await asyncio.create_subprocess_exec(
+            "helm",
+            "template",
+            "test-release",
+            str(chart_path),
+            "-f",
+            str(values_path),
+            "--namespace",
+            "test-namespace",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await process.communicate()
+
+        # Check that helm template succeeded
+        assert process.returncode == 0, f"helm template failed: {stderr.decode()}"
+
+        # Verify the output contains valid YAML
+        manifests = list(yaml.safe_load_all(stdout.decode()))
+        assert len(manifests) > 0, "No manifests generated"
+
+        # Verify we have expected resources
+        resource_kinds = {m.get("kind") for m in manifests if m}
+        assert "Deployment" in resource_kinds or "StatefulSet" in resource_kinds
+        assert "Service" in resource_kinds
 
     finally:
         values_path.unlink()

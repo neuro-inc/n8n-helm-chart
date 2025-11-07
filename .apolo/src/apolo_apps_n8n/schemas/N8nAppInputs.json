@@ -18,6 +18,28 @@
       "x-title": "Apolo Platform Authentication",
       "x-type": "ApoloAuth"
     },
+    "ApoloFilesPath": {
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string",
+          "x-description": "Provide the Apolo Storage path starting with `storage:` to locate your files.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Storage Path"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "ApoloFilesPath",
+      "type": "object",
+      "x-description": "Specify the path within the Apolo Files application to read from or write to.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Apolo Files Path",
+      "x-type": "ApoloFilesFile"
+    },
     "AuthIngressMiddleware": {
       "properties": {
         "name": {
@@ -368,6 +390,23 @@
           "x-is-advanced-field": false,
           "x-meta-type": "inline",
           "x-title": "Replicas"
+        },
+        "persistence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/N8nVolume"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": {
+            "storage_mount": {
+              "__type__": "ApoloFilesPath",
+              "path": "storage:.apps/n8n/n8n-app"
+            },
+            "__type__": "N8nVolume"
+          }
         }
       },
       "required": [
@@ -380,6 +419,26 @@
       "x-meta-type": "inline",
       "x-title": "Main Application Configuration",
       "x-type": "MainApplicationConfig"
+    },
+    "N8nVolume": {
+      "properties": {
+        "storage_mount": {
+          "$ref": "#/$defs/ApoloFilesPath",
+          "default": {
+            "path": "storage:.apps/n8n/n8n-app",
+            "__type__": "ApoloFilesPath"
+          },
+          "x-description": "Select a platform storage path to mount for the n8n data directory. This is required for both SQLite and PostgreSQL deployments to persist critical data.",
+          "x-title": "Storage Mount Path"
+        }
+      },
+      "title": "N8nVolume",
+      "type": "object",
+      "x-description": "Configure persistent storage for the n8n data directory. With SQLite, this stores all data including workflows and credentials. With PostgreSQL, workflows and credentials are stored in the database, while this volume stores encryption keys, instance logs, and source control assets.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Persistent Storage",
+      "x-type": "N8nVolume"
     },
     "NoAuth": {
       "properties": {

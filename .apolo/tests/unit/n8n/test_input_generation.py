@@ -9,6 +9,7 @@ from apolo_apps_n8n.app_types import (
     DBTypes,
     MainApplicationConfig,
     N8nAppInputs,
+    N8nVolume,
     PostgresDatabase,
     SQLiteDatabase,
     ValkeyArchitectureTypes,
@@ -20,7 +21,7 @@ from apolo_apps_n8n.app_types import (
 )
 from apolo_apps_n8n.inputs_processor import N8nAppChartValueProcessor
 
-from apolo_app_types.protocols.common import AutoscalingHPA, Preset
+from apolo_app_types.protocols.common import ApoloFilesPath, AutoscalingHPA, Preset
 from apolo_app_types.protocols.common.ingress import BasicNetworkingConfig
 from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 
@@ -29,7 +30,9 @@ from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 def basic_n8n_inputs():
     """Create basic N8nAppInputs for testing with SQLite database."""
     return N8nAppInputs(
-        main_app_config=MainApplicationConfig(preset=Preset(name="cpu-small")),
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"), persistence=None
+        ),
         worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
         webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
         valkey_config=ValkeyConfig(
@@ -375,3 +378,178 @@ async def test_valkey_replication_with_autoscaling(setup_clients, mock_get_prese
     assert hpa_config["maxReplicas"] == 10
     assert hpa_config["targetCPU"] == 70
     assert hpa_config["targetMemory"] == 80
+
+
+async def test_persistence_none_with_sqlite(setup_clients, mock_get_preset_cpu):
+    """Test N8n values generation with persistence=None and SQLite database."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"), persistence=None
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify basic structure exists
+    assert "main" in helm_params
+    assert "config" in helm_params["main"]
+
+
+async def test_persistence_none_with_postgres(setup_clients, mock_get_preset_cpu):
+    """Test N8n values generation with persistence=None and PostgreSQL database."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"), persistence=None
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=PostgresDatabase(
+                database_type=DBTypes.POSTGRES,
+                credentials=CrunchyPostgresUserCredentials(
+                    user="testuser",
+                    password="testpass",
+                    host="postgres.example.com",
+                    port=5432,
+                    pgbouncer_host="pgbouncer.example.com",
+                    pgbouncer_port=6432,
+                    pgbouncer_uri="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb",
+                ),
+            )
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify PostgreSQL configuration
+    db_config = helm_params["main"]["config"]["db"]
+    assert db_config["type"] == "postgresdb"
+
+
+async def test_custom_persistence_path_with_sqlite(setup_clients, mock_get_preset_cpu):
+    """Test N8n values generation with custom persistence path and SQLite."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    custom_path = "storage://test-cluster/custom/n8n/data"
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"),
+            persistence=N8nVolume(storage_mount=ApoloFilesPath(path=custom_path)),
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=SQLiteDatabase(database_type=DBTypes.SQLITE)
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify basic structure exists
+    assert "main" in helm_params
+    assert "config" in helm_params["main"]
+    assert "db" in helm_params["main"]["config"]
+    assert helm_params["main"]["config"]["db"]["type"] == "sqlite"
+
+
+async def test_custom_persistence_path_with_postgres(
+    setup_clients, mock_get_preset_cpu
+):
+    """Test N8n values generation with custom persistence path and PostgreSQL."""
+    apolo_client = setup_clients
+    input_processor = N8nAppChartValueProcessor(client=apolo_client)
+
+    custom_path = "storage://test-cluster/custom/n8n/data"
+    inputs = N8nAppInputs(
+        main_app_config=MainApplicationConfig(
+            preset=Preset(name="cpu-small"),
+            persistence=N8nVolume(storage_mount=ApoloFilesPath(path=custom_path)),
+        ),
+        worker_config=WorkerConfig(preset=Preset(name="cpu-small"), replicas=2),
+        webhook_config=WebhookConfig(preset=Preset(name="cpu-small"), replicas=1),
+        valkey_config=ValkeyConfig(
+            preset=Preset(name="cpu-small"),
+            architecture=ValkeyStandaloneArchitecture(
+                architecture_type=ValkeyArchitectureTypes.STANDALONE
+            ),
+        ),
+        networking=BasicNetworkingConfig(),
+        database_config=DataBaseConfig(
+            database=PostgresDatabase(
+                database_type=DBTypes.POSTGRES,
+                credentials=CrunchyPostgresUserCredentials(
+                    user="testuser",
+                    password="testpass",
+                    host="postgres.example.com",
+                    port=5432,
+                    pgbouncer_host="pgbouncer.example.com",
+                    pgbouncer_port=6432,
+                    pgbouncer_uri="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb",
+                ),
+            )
+        ),
+    )
+
+    helm_params = await input_processor.gen_extra_values(
+        input_=inputs,
+        app_name="n8n-app",
+        namespace=DEFAULT_NAMESPACE,
+        app_secrets_name=APP_SECRETS_NAME,
+        app_id=APP_ID,
+    )
+
+    # Verify PostgreSQL configuration
+    db_config = helm_params["main"]["config"]["db"]
+    assert db_config["type"] == "postgresdb"
+    assert "postgresdb" in db_config
