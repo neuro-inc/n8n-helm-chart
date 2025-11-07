@@ -14,7 +14,7 @@
     types_name: N8nAppOutputs
     processor: N8nAppOutputProcessor
     image: ghcr.io/neuro-inc/n8n-hook
-  short_description: Workflow automation with AI
+  short_description: Deploy workflow automation platform with AI support
   description: |
     N8n App allows you to automate workflows by connecting various services and applications.
     With its user-friendly interface, you can create complex automation sequences without coding,
