@@ -87,7 +87,10 @@ class MainApplicationConfig(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="Main Application Configuration", description=""
+            title="Main Application Configuration",
+            description="Configure the primary n8n service that handles core "
+            "workflow automation functionality, processes workflows, and "
+            "manages the user interface.",
         ).as_json_schema_extra(),
     )
     preset: Preset
@@ -105,7 +108,11 @@ class WorkerConfig(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="Worker Configuration", description=""
+            title="Worker Configuration",
+            description="Configure workers for distributed background job "
+            "processing. Workers handle workflow execution tasks, enabling "
+            "the main application to remain responsive by offloading "
+            "computational work.",
         ).as_json_schema_extra(),
     )
     preset: Preset
@@ -116,7 +123,10 @@ class WebhookConfig(AbstractAppFieldType):
     model_config = ConfigDict(
         protected_namespaces=(),
         json_schema_extra=SchemaExtraMetadata(
-            title="Webhook Configuration", description=""
+            title="Webhook Configuration",
+            description="Configure dedicated webhook processing instances. "
+            "Separating webhook handling allows dedicated resource allocation "
+            "for webhook traffic without competing with core workflow execution.",
         ).as_json_schema_extra(),
     )
     preset: Preset
