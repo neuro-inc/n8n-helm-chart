@@ -1,0 +1,729 @@
+{
+  "$defs": {
+    "ApoloAuth": {
+      "properties": {
+        "type": {
+          "const": "apolo_auth",
+          "default": "apolo_auth",
+          "description": "Authentication type identifier",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "ApoloAuth",
+      "type": "object",
+      "x-description": "Use Apolo platform's built-in authentication and authorization. Requires authenticated user credentials with appropriate permissions.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Apolo Platform Authentication",
+      "x-type": "ApoloAuth"
+    },
+    "ApoloFilesPath": {
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string",
+          "x-description": "Provide the Apolo Storage path starting with `storage:` to locate your files.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Storage Path"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "ApoloFilesPath",
+      "type": "object",
+      "x-description": "Specify the path within the Apolo Files application to read from or write to.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Apolo Files Path",
+      "x-type": "ApoloFilesFile"
+    },
+    "AuthIngressMiddleware": {
+      "properties": {
+        "name": {
+          "pattern": "^platform",
+          "title": "Name",
+          "type": "string",
+          "x-description": "Name of the authentication middleware (with namespace) to apply to ingress traffic.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Middleware Name"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "AuthIngressMiddleware",
+      "type": "object",
+      "x-description": "Configure authentication middleware for ingress traffic.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "integration",
+      "x-title": "Authentication Ingress Middleware",
+      "x-type": "AuthIngressMiddleware"
+    },
+    "AutoscalingHPA": {
+      "properties": {
+        "min_replicas": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Min Replicas",
+          "type": "integer",
+          "x-description": "Set the minimum number of replicas for your deployment.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Minimum Replicas"
+        },
+        "max_replicas": {
+          "default": 5,
+          "exclusiveMinimum": 0,
+          "title": "Max Replicas",
+          "type": "integer",
+          "x-description": "Limit the maximum number of replicas for your deployment.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Maximum Replicas"
+        },
+        "target_cpu_utilization_percentage": {
+          "default": 80,
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "title": "Target Cpu Utilization Percentage",
+          "type": "integer",
+          "x-description": "Choose target CPU utilization percentage for autoscaling.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Target CPU Utilization Percentage"
+        },
+        "target_memory_utilization_percentage": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Memory Utilization Percentage",
+          "x-description": "Choose target memory utilization percentage for autoscaling.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Target Memory Utilization Percentage"
+        }
+      },
+      "title": "AutoscalingHPA",
+      "type": "object",
+      "x-description": "Autoscaling configuration for Horizontal Pod Autoscaler.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Autoscaling HPA",
+      "x-type": "AutoscalingHPA"
+    },
+    "BasicNetworkingConfig": {
+      "description": "Common networking configuration for applications.",
+      "properties": {
+        "ingress_http": {
+          "$ref": "#/$defs/IngressHttp",
+          "x-description": "Configure HTTP ingress and authentication settings.",
+          "x-title": "HTTP Ingress"
+        }
+      },
+      "title": "BasicNetworkingConfig",
+      "type": "object",
+      "x-description": "Configure network access and authentication settings.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Networking Settings",
+      "x-type": "BasicNetworkingConfig"
+    },
+    "CrunchyPostgresUserCredentials": {
+      "properties": {
+        "user": {
+          "title": "User",
+          "type": "string",
+          "x-description": "Username for the Postgres user.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres User"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "x-description": "Password for the Postgres user.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Password"
+        },
+        "host": {
+          "title": "Host",
+          "type": "string",
+          "x-description": "Host of the Postgres instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Host"
+        },
+        "port": {
+          "exclusiveMinimum": 0,
+          "title": "Port",
+          "type": "integer",
+          "x-description": "Port of the Postgres instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Postgres Port"
+        },
+        "pgbouncer_host": {
+          "title": "Pgbouncer Host",
+          "type": "string",
+          "x-description": "Host of the PGBouncer instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "PGBouncer Host"
+        },
+        "pgbouncer_port": {
+          "exclusiveMinimum": 0,
+          "title": "Pgbouncer Port",
+          "type": "integer",
+          "x-description": "Port of the PGBouncer instance.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "PGBouncer Port"
+        },
+        "dbname": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dbname"
+        },
+        "jdbc_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Jdbc Uri"
+        },
+        "pgbouncer_jdbc_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pgbouncer Jdbc Uri"
+        },
+        "pgbouncer_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pgbouncer Uri"
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uri"
+        },
+        "postgres_uri": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostgresURI"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "user_type": {
+          "const": "user",
+          "default": "user",
+          "title": "User Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user",
+        "password",
+        "host",
+        "port",
+        "pgbouncer_host",
+        "pgbouncer_port"
+      ],
+      "title": "CrunchyPostgresUserCredentials",
+      "type": "object",
+      "x-description": "Configuration for Crunchy Postgres user credentials.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "integration",
+      "x-title": "Postgres User Credentials",
+      "x-type": "CrunchyPostgresUserCredentials"
+    },
+    "CustomAuth": {
+      "properties": {
+        "type": {
+          "const": "custom_auth",
+          "default": "custom_auth",
+          "description": "Authentication type identifier",
+          "title": "Type",
+          "type": "string"
+        },
+        "middleware": {
+          "$ref": "#/$defs/AuthIngressMiddleware",
+          "x-description": "Custom authentication middleware configuration.",
+          "x-title": "Authentication Middleware"
+        }
+      },
+      "required": [
+        "middleware"
+      ],
+      "title": "CustomAuth",
+      "type": "object",
+      "x-description": "Use a custom authentication middleware for this ingress. Allows integration with custom authentication providers.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Custom Authentication",
+      "x-type": "CustomAuth"
+    },
+    "DataBaseConfig": {
+      "properties": {
+        "database": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SQLiteDatabase"
+            },
+            {
+              "$ref": "#/$defs/PostgresDatabase"
+            }
+          ],
+          "title": "Database",
+          "x-description": "Configure the database for n8n. Choose between local SQLite or Postgres.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Database Configuration"
+        }
+      },
+      "title": "DataBaseConfig",
+      "type": "object",
+      "x-description": "Configure the database for n8n.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Database Configuration",
+      "x-type": "DataBaseConfig"
+    },
+    "IngressHttp": {
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApoloAuth"
+            },
+            {
+              "$ref": "#/$defs/NoAuth"
+            },
+            {
+              "$ref": "#/$defs/CustomAuth"
+            }
+          ],
+          "title": "Auth",
+          "x-description": "Configure authentication for this ingress. Choose Apolo platform authentication, custom middleware, or no authentication.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Authentication"
+        }
+      },
+      "title": "IngressHttp",
+      "type": "object",
+      "x-description": "Enable access to your application over the internet using HTTPS.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Enable HTTP Ingress",
+      "x-type": "IngressHttp"
+    },
+    "MainApplicationConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "replica_scaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReplicaCount"
+            },
+            {
+              "$ref": "#/$defs/AutoscalingHPA"
+            }
+          ],
+          "default": {
+            "replicas": 1,
+            "__type__": "ReplicaCount"
+          },
+          "title": "Replica Scaling",
+          "x-description": "Choose a fixed number of replicas or enable autoscaling.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Replicas"
+        },
+        "persistence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/N8nVolume"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": {
+            "storage_mount": {
+              "__type__": "ApoloFilesPath",
+              "path": "storage:.apps/n8n/n8n-app"
+            },
+            "__type__": "N8nVolume"
+          }
+        }
+      },
+      "required": [
+        "preset"
+      ],
+      "title": "MainApplicationConfig",
+      "type": "object",
+      "x-description": "Configure the primary n8n service that handles core workflow automation functionality, processes workflows, and manages the user interface.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Main Application Configuration",
+      "x-type": "MainApplicationConfig"
+    },
+    "N8nVolume": {
+      "properties": {
+        "storage_mount": {
+          "$ref": "#/$defs/ApoloFilesPath",
+          "default": {
+            "path": "storage:.apps/n8n/n8n-app",
+            "__type__": "ApoloFilesPath"
+          },
+          "x-description": "Select a platform storage path to mount for the n8n data directory. This is required for both SQLite and PostgreSQL deployments to persist critical data.",
+          "x-title": "Storage Mount Path"
+        }
+      },
+      "title": "N8nVolume",
+      "type": "object",
+      "x-description": "Configure persistent storage for the n8n data directory. With SQLite, this stores all data including workflows and credentials. With PostgreSQL, workflows and credentials are stored in the database, while this volume stores encryption keys, instance logs, and source control assets.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Persistent Storage",
+      "x-type": "N8nVolume"
+    },
+    "NoAuth": {
+      "properties": {
+        "type": {
+          "const": "no_auth",
+          "default": "no_auth",
+          "description": "Authentication type identifier",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "NoAuth",
+      "type": "object",
+      "x-description": "Disable authentication for this ingress. The application will be publicly accessible without any authentication.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "No Authentication",
+      "x-type": "NoAuth"
+    },
+    "PostgresDatabase": {
+      "properties": {
+        "database_type": {
+          "const": "postgres",
+          "default": "postgres",
+          "title": "Database Type",
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/CrunchyPostgresUserCredentials"
+        }
+      },
+      "required": [
+        "credentials"
+      ],
+      "title": "PostgresDatabase",
+      "type": "object",
+      "x-description": "Use a Postgres database for n8n.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Postgres Database",
+      "x-type": "PostgresDatabase"
+    },
+    "PostgresURI": {
+      "description": "Configuration for the Postgres connection URI.",
+      "properties": {
+        "uri": {
+          "title": "Uri",
+          "type": "string",
+          "x-description": "Specify full Postgres connection URI. E.g. 'postgresql://user:pass@host:5432/db'",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "URI"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "title": "PostgresURI",
+      "type": "object",
+      "x-description": "Full Postgres connection URI configuration.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Postgres URI",
+      "x-type": "PostgresURI"
+    },
+    "Preset": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "x-description": "The name of the preset.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Resource Preset"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Preset",
+      "type": "object",
+      "x-description": "Select the resource preset used per service replica.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Resource Preset",
+      "x-type": "Preset"
+    },
+    "ReplicaCount": {
+      "properties": {
+        "replicas": {
+          "default": 1,
+          "title": "Replicas",
+          "type": "integer",
+          "x-description": "Number of replicas created for main application.",
+          "x-is-advanced-field": false,
+          "x-meta-type": "inline",
+          "x-title": "Replica Count"
+        }
+      },
+      "title": "ReplicaCount",
+      "type": "object",
+      "x-description": "This option create a fixed number of replicas with no autoscaling enabled.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Fixed Replica Count",
+      "x-type": "ReplicaCount"
+    },
+    "SQLiteDatabase": {
+      "properties": {
+        "database_type": {
+          "const": "sqlite",
+          "default": "sqlite",
+          "title": "Database Type",
+          "type": "string"
+        }
+      },
+      "title": "SQLiteDatabase",
+      "type": "object",
+      "x-description": "Use a local SQLite database for n8n.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "SQLite Database",
+      "x-type": "SQLiteDatabase"
+    },
+    "ValkeyConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "architecture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ValkeyStandaloneArchitecture"
+            },
+            {
+              "$ref": "#/$defs/ValkeyReplicationArchitecture"
+            }
+          ],
+          "title": "Architecture"
+        }
+      },
+      "required": [
+        "preset",
+        "architecture"
+      ],
+      "title": "ValkeyConfig",
+      "type": "object",
+      "x-description": "",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Valkey/Redis Configuration",
+      "x-type": "ValkeyConfig"
+    },
+    "ValkeyReplicationArchitecture": {
+      "properties": {
+        "architecture_type": {
+          "const": "replication",
+          "title": "Architecture Type",
+          "type": "string"
+        },
+        "replica_preset": {
+          "$ref": "#/$defs/Preset",
+          "x-description": "",
+          "x-title": "Replica Preset"
+        },
+        "autoscaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoscalingHPA"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "x-description": "Enable Autoscaling and configure it.",
+          "x-is-advanced-field": true,
+          "x-meta-type": "inline",
+          "x-title": "Autoscaling"
+        }
+      },
+      "required": [
+        "architecture_type",
+        "replica_preset"
+      ],
+      "title": "ValkeyReplicationArchitecture",
+      "type": "object",
+      "x-description": "This mode will deploy a Valkey\n                    primary StatefulSet and a Valkey replicas StatefulSet.\n                    The replicas will be read-replicas of the primary and\n                    two services will be exposed",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Replication Mode",
+      "x-type": "ValkeyReplicationArchitecture"
+    },
+    "ValkeyStandaloneArchitecture": {
+      "properties": {
+        "architecture_type": {
+          "const": "standalone",
+          "title": "Architecture Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "architecture_type"
+      ],
+      "title": "ValkeyStandaloneArchitecture",
+      "type": "object",
+      "x-description": "This mode wiill deploy a standalone\n                    Valkey StatefulSet. A single service will be exposed",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Standalone Mode",
+      "x-type": "ValkeyStandaloneArchitecture"
+    },
+    "WebhookConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "replicas": {
+          "title": "Replicas",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preset",
+        "replicas"
+      ],
+      "title": "WebhookConfig",
+      "type": "object",
+      "x-description": "Configure dedicated webhook processing instances. Separating webhook handling allows dedicated resource allocation for webhook traffic without competing with core workflow execution.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Webhook Configuration",
+      "x-type": "WebhookConfig"
+    },
+    "WorkerConfig": {
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/Preset"
+        },
+        "replicas": {
+          "title": "Replicas",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preset",
+        "replicas"
+      ],
+      "title": "WorkerConfig",
+      "type": "object",
+      "x-description": "Configure workers for distributed background job processing. Workers handle workflow execution tasks, enabling the main application to remain responsive by offloading computational work.",
+      "x-is-advanced-field": false,
+      "x-meta-type": "inline",
+      "x-title": "Worker Configuration",
+      "x-type": "WorkerConfig"
+    }
+  },
+  "properties": {
+    "main_app_config": {
+      "$ref": "#/$defs/MainApplicationConfig"
+    },
+    "worker_config": {
+      "$ref": "#/$defs/WorkerConfig"
+    },
+    "webhook_config": {
+      "$ref": "#/$defs/WebhookConfig"
+    },
+    "valkey_config": {
+      "$ref": "#/$defs/ValkeyConfig"
+    },
+    "networking": {
+      "$ref": "#/$defs/BasicNetworkingConfig",
+      "x-description": "Configure network access, HTTP authentication, and related connectivity options."
+    },
+    "database_config": {
+      "$ref": "#/$defs/DataBaseConfig"
+    }
+  },
+  "required": [
+    "main_app_config",
+    "worker_config",
+    "webhook_config",
+    "valkey_config",
+    "database_config"
+  ],
+  "title": "N8nAppInputs",
+  "type": "object"
+}

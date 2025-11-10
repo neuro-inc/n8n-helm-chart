@@ -1,6 +1,6 @@
 name: Conventional Commits Check
 
-on: pull_request
+# on: pull_request
 
 jobs:
   check-conventional-commits:

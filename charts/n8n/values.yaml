@@ -16,9 +16,10 @@ image:
   repository: n8nio/n8n
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "1.116.2"
 imagePullSecrets: []
 
+labels: {}
 # The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
 nameOverride:
 # Override the full name of the deployment. When empty, the name will be "{release-name}-{chart-name}" or the value of nameOverride if specified
@@ -48,6 +49,7 @@ ingress:
 # the main (n8n) application related configuration + Kubernetes specific settings
 # The config: {} dictionary is converted to environmental variables in the ConfigMap.
 main:
+  useApoloStorage: false
   # See https://docs.n8n.io/hosting/configuration/environment-variables/ for all values.
   config: {}
   #    n8n:
@@ -242,6 +244,7 @@ main:
     type: ClusterIP
     # -- Service port
     port: 80
+    labels: {}
 
   resources: {}
   # We usually recommend not specifying default resources and to leave this as a conscious

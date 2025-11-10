@@ -34,8 +34,12 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "n8n.labels" -}}
+application: {{ .Values.labels.application }}
 helm.sh/chart: {{ include "n8n.chart" . }}
 {{ include "n8n.selectorLabels" . }}
+{{- if .Values.apolo_app_id }}
+platform.apolo.us/app-id: {{ .Values.apolo_app_id | quote }}
+{{- end }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -102,4 +106,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{/* Apolo specific */}}
+{{- define "n8n.apoloPodLabels" -}}
+platform.apolo.us/preset: {{ .preset_name }}
+platform.apolo.us/component: app
+{{- end }}
 
