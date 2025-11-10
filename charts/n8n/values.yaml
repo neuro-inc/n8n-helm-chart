@@ -49,6 +49,7 @@ ingress:
 # the main (n8n) application related configuration + Kubernetes specific settings
 # The config: {} dictionary is converted to environmental variables in the ConfigMap.
 main:
+  useApoloStorage: false
   # See https://docs.n8n.io/hosting/configuration/environment-variables/ for all values.
   config: {}
   #    n8n:

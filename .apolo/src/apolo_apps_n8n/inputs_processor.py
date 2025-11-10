@@ -205,6 +205,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 main_config["podLabels"] = (
                     main_config.get("podLabels", {}) | storage_labels
                 )
+            main_config["useApoloStorage"] = True
 
         return {
             "apolo_app_id": extra_values["apolo_app_id"],

@@ -95,9 +95,13 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.main.resources | nindent 12 }}
+          {{- if not .Values.main.useApoloStorage }}
           volumeMounts:
             - name: data
               mountPath: /home/node/.n8n
+          {{- else }}
+          volumeMounts: []
+          {{- end }}
           {{- if .Values.main.extraVolumeMounts }}
             {{- toYaml .Values.main.extraVolumeMounts | nindent 12 }}
           {{- end }}
