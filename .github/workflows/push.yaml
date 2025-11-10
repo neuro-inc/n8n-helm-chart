@@ -1,9 +1,9 @@
 name: Release Charts
 
-on:
-  push:
-    tags:
-      - '*'
+# on:
+#   push:
+#     tags:
+#       - '*'
 
 jobs:
   release:
@@ -40,7 +40,7 @@ jobs:
           input: charts/n8n/values.yaml
           # "Skip copying the schema values file for now, as it needs more testing."
       - name: Push charts to 8gears.container-registry.com
-        run: |          
+        run: |
           cp -a README.md LICENSE charts/n8n/
           package_path=$(helm package charts/n8n --dependency-update | grep -o '/.*\.tgz')
           helm push "${package_path}" "oci://8gears.container-registry.com/library"
