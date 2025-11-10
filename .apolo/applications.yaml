@@ -29,6 +29,9 @@
       url: "https://storage.googleapis.com/development-421920-assets/app-logos/n8n-banner.svg"
 
   urls:
+    - name: n8n Apolo Documentation
+      type: documentation
+      url: https://docs.apolo.us/index/apolo-console/apps/installable-apps/available-apps/n8n
     - name: n8n Documentation
       type: documentation
       url: https://docs.n8n.io/
