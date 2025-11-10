@@ -133,7 +133,7 @@ class MainApplicationConfig(AbstractAppFieldType):
         default=ReplicaCount(replicas=1),
         json_schema_extra=SchemaExtraMetadata(
             title="Replicas",
-            description="Choose a fixed number of replicas or " "enable autoscaling.",
+            description="Choose a fixed number of replicas or enable autoscaling.",
         ).as_json_schema_extra(),
     )
     persistence: N8nVolume | None = Field(default=N8nVolume())
