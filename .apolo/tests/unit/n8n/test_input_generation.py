@@ -23,6 +23,7 @@ from apolo_apps_n8n.inputs_processor import N8nAppChartValueProcessor
 
 from apolo_app_types.protocols.common import ApoloFilesPath, AutoscalingHPA, Preset
 from apolo_app_types.protocols.common.ingress import BasicNetworkingConfig
+from apolo_app_types.protocols.common.secrets_ import ApoloSecret
 from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 
 
@@ -67,12 +68,15 @@ def postgres_n8n_inputs():
                 database_type=DBTypes.POSTGRES,
                 credentials=CrunchyPostgresUserCredentials(
                     user="testuser",
-                    password="testpass",
+                    password=ApoloSecret(key="testpass"),
                     host="postgres.example.com",
                     port=5432,
                     pgbouncer_host="pgbouncer.example.com",
                     pgbouncer_port=6432,
-                    pgbouncer_uri="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb",
+                    dbname="testdb",
+                    pgbouncer_uri=ApoloSecret(
+                        key="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb"
+                    ),
                 ),
             )
         ),
@@ -172,7 +176,6 @@ async def test_n8n_values_generation_with_postgres(
     # Verify parsed PostgreSQL connection details
     pg_config = db_config["postgresdb"]
     assert pg_config["user"] == "testuser"
-    assert pg_config["password"] == "testpass"
     assert pg_config["host"] == "pgbouncer.example.com"
     assert pg_config["port"] == 6432
     assert pg_config["database"] == "testdb"
@@ -202,7 +205,7 @@ async def test_database_config_without_pgbouncer_uri(
                 database_type=DBTypes.POSTGRES,
                 credentials=CrunchyPostgresUserCredentials(
                     user="testuser",
-                    password="testpass",
+                    password=ApoloSecret(key="testpass"),
                     host="postgres.example.com",
                     port=5432,
                     pgbouncer_host="pgbouncer.example.com",
@@ -251,12 +254,12 @@ async def test_database_config_with_empty_pgbouncer_uri(
                 database_type=DBTypes.POSTGRES,
                 credentials=CrunchyPostgresUserCredentials(
                     user="testuser",
-                    password="testpass",
+                    password=ApoloSecret(key="testpass"),
                     host="postgres.example.com",
                     port=5432,
                     pgbouncer_host="pgbouncer.example.com",
                     pgbouncer_port=6432,
-                    pgbouncer_uri="",  # Empty string
+                    pgbouncer_uri=ApoloSecret(key=""),  # Empty string
                 ),
             )
         ),
@@ -439,12 +442,15 @@ async def test_persistence_none_with_postgres(setup_clients, mock_get_preset_cpu
                 database_type=DBTypes.POSTGRES,
                 credentials=CrunchyPostgresUserCredentials(
                     user="testuser",
-                    password="testpass",
+                    password=ApoloSecret(key="testpass"),
                     host="postgres.example.com",
                     port=5432,
                     pgbouncer_host="pgbouncer.example.com",
                     pgbouncer_port=6432,
-                    pgbouncer_uri="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb",
+                    dbname="testdb",
+                    pgbouncer_uri=ApoloSecret(
+                        key="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb"
+                    ),
                 ),
             )
         ),
@@ -530,12 +536,15 @@ async def test_custom_persistence_path_with_postgres(
                 database_type=DBTypes.POSTGRES,
                 credentials=CrunchyPostgresUserCredentials(
                     user="testuser",
-                    password="testpass",
+                    password=ApoloSecret(key="testpass"),
                     host="postgres.example.com",
                     port=5432,
                     pgbouncer_host="pgbouncer.example.com",
                     pgbouncer_port=6432,
-                    pgbouncer_uri="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb",
+                    dbname="testdb",
+                    pgbouncer_uri=ApoloSecret(
+                        key="postgresql://testuser:testpass@pgbouncer.example.com:6432/testdb"
+                    ),
                 ),
             )
         ),

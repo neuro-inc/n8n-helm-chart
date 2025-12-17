@@ -16,6 +16,7 @@ from apolo_app_types.protocols.common import (
     AutoscalingHPA,
     Preset,
 )
+from apolo_app_types.protocols.common.secrets_ import serialize_optional_secret
 from apolo_app_types.protocols.common.storage import (
     ApoloMountMode,
     ApoloMountModes,
@@ -39,21 +40,33 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 "sqlite": {"pool_size": 1, "vacuum_on_startup": True},
             }
         if db.database_type == DBTypes.POSTGRES:
-            if not db.credentials.pgbouncer_uri:
+            if not db.credentials.pgbouncer_uri or not db.credentials.pgbouncer_uri.key:
                 err = "PostgreSQL database configuration requires a valid pgbouncer_uri"
                 raise ValueError(err)
             return {
                 "type": "postgresdb",
-                "postgresdb": parse_postgres_connection_string(
-                    db.credentials.pgbouncer_uri
-                ),
+                "postgresdb": parse_postgres_connection_string(db.credentials),
             }
         err = "Invalid database configuration"
         raise ValueError(err)
 
+    def get_extra_env(
+        self, input_: N8nAppInputs, app_secrets_name: str
+    ) -> dict[str, t.Any]:
+        db = input_.database_config.database
+        if db.database_type == DBTypes.POSTGRES:
+            return {
+                "DB_POSTGRESDB_PASSWORD": serialize_optional_secret(
+                    value=db.credentials.password, secret_name=app_secrets_name
+                )
+            }
+        return {}
+
     async def preset_to_values(self, preset: Preset) -> dict[str, t.Any]:
         apolo_preset = get_preset(self.client, preset.name)
-        values = await get_component_values(apolo_preset, preset.name)
+        values = t.cast(
+            dict[str, t.Any], await get_component_values(apolo_preset, preset.name)
+        )
         values["podLabels"] = values["labels"]
         values["deploymentLabels"] = values["labels"]
         return values
@@ -166,6 +179,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 "db": self.get_database_values(input_),
             },
             "service": {"labels": {"service": "main"}},
+            "extraEnv": self.get_extra_env(input_, app_secrets_name),
         }
         if isinstance(input_.main_app_config.replica_scaling, AutoscalingHPA):
             main_config["autoscaling"] = self.get_autoscaling_values(

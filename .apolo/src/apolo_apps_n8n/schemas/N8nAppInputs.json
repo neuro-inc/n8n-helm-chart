@@ -14,6 +14,7 @@
       "type": "object",
       "x-description": "Use Apolo platform's built-in authentication and authorization. Requires authenticated user credentials with appropriate permissions.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Apolo Platform Authentication",
       "x-type": "ApoloAuth"
@@ -25,6 +26,7 @@
           "type": "string",
           "x-description": "Provide the Apolo Storage path starting with `storage:` to locate your files.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Storage Path"
         }
@@ -36,9 +38,29 @@
       "type": "object",
       "x-description": "Specify the path within the Apolo Files application to read from or write to.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Apolo Files Path",
       "x-type": "ApoloFilesFile"
+    },
+    "ApoloSecret": {
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "title": "ApoloSecret",
+      "type": "object",
+      "x-description": "Apolo Secret Configuration.",
+      "x-is-advanced-field": false,
+      "x-is-configurable": true,
+      "x-meta-type": "inline",
+      "x-title": "Secret",
+      "x-type": "ApoloSecret"
     },
     "AuthIngressMiddleware": {
       "properties": {
@@ -48,6 +70,7 @@
           "type": "string",
           "x-description": "Name of the authentication middleware (with namespace) to apply to ingress traffic.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Middleware Name"
         }
@@ -59,6 +82,7 @@
       "type": "object",
       "x-description": "Configure authentication middleware for ingress traffic.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "integration",
       "x-title": "Authentication Ingress Middleware",
       "x-type": "AuthIngressMiddleware"
@@ -72,6 +96,7 @@
           "type": "integer",
           "x-description": "Set the minimum number of replicas for your deployment.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Minimum Replicas"
         },
@@ -82,6 +107,7 @@
           "type": "integer",
           "x-description": "Limit the maximum number of replicas for your deployment.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Maximum Replicas"
         },
@@ -93,6 +119,7 @@
           "type": "integer",
           "x-description": "Choose target CPU utilization percentage for autoscaling.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Target CPU Utilization Percentage"
         },
@@ -111,6 +138,7 @@
           "title": "Target Memory Utilization Percentage",
           "x-description": "Choose target memory utilization percentage for autoscaling.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Target Memory Utilization Percentage"
         }
@@ -119,6 +147,7 @@
       "type": "object",
       "x-description": "Autoscaling configuration for Horizontal Pod Autoscaler.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Autoscaling HPA",
       "x-type": "AutoscalingHPA"
@@ -136,6 +165,7 @@
       "type": "object",
       "x-description": "Configure network access and authentication settings.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Networking Settings",
       "x-type": "BasicNetworkingConfig"
@@ -147,15 +177,13 @@
           "type": "string",
           "x-description": "Username for the Postgres user.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Postgres User"
         },
         "password": {
-          "title": "Password",
-          "type": "string",
+          "$ref": "#/$defs/ApoloSecret",
           "x-description": "Password for the Postgres user.",
-          "x-is-advanced-field": false,
-          "x-meta-type": "inline",
           "x-title": "Postgres Password"
         },
         "host": {
@@ -163,6 +191,7 @@
           "type": "string",
           "x-description": "Host of the Postgres instance.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Postgres Host"
         },
@@ -172,6 +201,7 @@
           "type": "integer",
           "x-description": "Port of the Postgres instance.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Postgres Port"
         },
@@ -180,6 +210,7 @@
           "type": "string",
           "x-description": "Host of the PGBouncer instance.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "PGBouncer Host"
         },
@@ -189,6 +220,7 @@
           "type": "integer",
           "x-description": "Port of the PGBouncer instance.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "PGBouncer Port"
         },
@@ -204,58 +236,21 @@
           "default": null,
           "title": "Dbname"
         },
-        "jdbc_uri": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Jdbc Uri"
-        },
-        "pgbouncer_jdbc_uri": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Pgbouncer Jdbc Uri"
-        },
         "pgbouncer_uri": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/ApoloSecret"
             },
             {
               "type": "null"
             }
           ],
-          "default": null,
-          "title": "Pgbouncer Uri"
-        },
-        "uri": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Uri"
+          "default": null
         },
         "postgres_uri": {
           "anyOf": [
             {
-              "$ref": "#/$defs/PostgresURI"
+              "$ref": "#/$defs/ApoloSecret"
             },
             {
               "type": "null"
@@ -282,6 +277,7 @@
       "type": "object",
       "x-description": "Configuration for Crunchy Postgres user credentials.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "integration",
       "x-title": "Postgres User Credentials",
       "x-type": "CrunchyPostgresUserCredentials"
@@ -308,6 +304,7 @@
       "type": "object",
       "x-description": "Use a custom authentication middleware for this ingress. Allows integration with custom authentication providers.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Custom Authentication",
       "x-type": "CustomAuth"
@@ -326,6 +323,7 @@
           "title": "Database",
           "x-description": "Configure the database for n8n. Choose between local SQLite or Postgres.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Database Configuration"
         }
@@ -334,6 +332,7 @@
       "type": "object",
       "x-description": "Configure the database for n8n.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Database Configuration",
       "x-type": "DataBaseConfig"
@@ -355,6 +354,7 @@
           "title": "Auth",
           "x-description": "Configure authentication for this ingress. Choose Apolo platform authentication, custom middleware, or no authentication.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Authentication"
         }
@@ -363,6 +363,7 @@
       "type": "object",
       "x-description": "Enable access to your application over the internet using HTTPS.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Enable HTTP Ingress",
       "x-type": "IngressHttp"
@@ -388,6 +389,7 @@
           "title": "Replica Scaling",
           "x-description": "Choose a fixed number of replicas or enable autoscaling.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Replicas"
         },
@@ -416,6 +418,7 @@
       "type": "object",
       "x-description": "Configure the primary n8n service that handles core workflow automation functionality, processes workflows, and manages the user interface.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Main Application Configuration",
       "x-type": "MainApplicationConfig"
@@ -436,6 +439,7 @@
       "type": "object",
       "x-description": "Configure persistent storage for the n8n data directory. With SQLite, this stores all data including workflows and credentials. With PostgreSQL, workflows and credentials are stored in the database, while this volume stores encryption keys, instance logs, and source control assets.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Persistent Storage",
       "x-type": "N8nVolume"
@@ -454,6 +458,7 @@
       "type": "object",
       "x-description": "Disable authentication for this ingress. The application will be publicly accessible without any authentication.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "No Authentication",
       "x-type": "NoAuth"
@@ -477,32 +482,10 @@
       "type": "object",
       "x-description": "Use a Postgres database for n8n.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Postgres Database",
       "x-type": "PostgresDatabase"
-    },
-    "PostgresURI": {
-      "description": "Configuration for the Postgres connection URI.",
-      "properties": {
-        "uri": {
-          "title": "Uri",
-          "type": "string",
-          "x-description": "Specify full Postgres connection URI. E.g. 'postgresql://user:pass@host:5432/db'",
-          "x-is-advanced-field": false,
-          "x-meta-type": "inline",
-          "x-title": "URI"
-        }
-      },
-      "required": [
-        "uri"
-      ],
-      "title": "PostgresURI",
-      "type": "object",
-      "x-description": "Full Postgres connection URI configuration.",
-      "x-is-advanced-field": false,
-      "x-meta-type": "inline",
-      "x-title": "Postgres URI",
-      "x-type": "PostgresURI"
     },
     "Preset": {
       "properties": {
@@ -511,6 +494,7 @@
           "type": "string",
           "x-description": "The name of the preset.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Resource Preset"
         }
@@ -522,6 +506,7 @@
       "type": "object",
       "x-description": "Select the resource preset used per service replica.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Resource Preset",
       "x-type": "Preset"
@@ -534,6 +519,7 @@
           "type": "integer",
           "x-description": "Number of replicas created for main application.",
           "x-is-advanced-field": false,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Replica Count"
         }
@@ -542,6 +528,7 @@
       "type": "object",
       "x-description": "This option create a fixed number of replicas with no autoscaling enabled.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Fixed Replica Count",
       "x-type": "ReplicaCount"
@@ -559,6 +546,7 @@
       "type": "object",
       "x-description": "Use a local SQLite database for n8n.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "SQLite Database",
       "x-type": "SQLiteDatabase"
@@ -588,6 +576,7 @@
       "type": "object",
       "x-description": "",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Valkey/Redis Configuration",
       "x-type": "ValkeyConfig"
@@ -616,6 +605,7 @@
           "default": null,
           "x-description": "Enable Autoscaling and configure it.",
           "x-is-advanced-field": true,
+          "x-is-configurable": true,
           "x-meta-type": "inline",
           "x-title": "Autoscaling"
         }
@@ -628,6 +618,7 @@
       "type": "object",
       "x-description": "This mode will deploy a Valkey\n                    primary StatefulSet and a Valkey replicas StatefulSet.\n                    The replicas will be read-replicas of the primary and\n                    two services will be exposed",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Replication Mode",
       "x-type": "ValkeyReplicationArchitecture"
@@ -647,6 +638,7 @@
       "type": "object",
       "x-description": "This mode wiill deploy a standalone\n                    Valkey StatefulSet. A single service will be exposed",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Standalone Mode",
       "x-type": "ValkeyStandaloneArchitecture"
@@ -669,6 +661,7 @@
       "type": "object",
       "x-description": "Configure dedicated webhook processing instances. Separating webhook handling allows dedicated resource allocation for webhook traffic without competing with core workflow execution.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Webhook Configuration",
       "x-type": "WebhookConfig"
@@ -691,6 +684,7 @@
       "type": "object",
       "x-description": "Configure workers for distributed background job processing. Workers handle workflow execution tasks, enabling the main application to remain responsive by offloading computational work.",
       "x-is-advanced-field": false,
+      "x-is-configurable": true,
       "x-meta-type": "inline",
       "x-title": "Worker Configuration",
       "x-type": "WorkerConfig"
