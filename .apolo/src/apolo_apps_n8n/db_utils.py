@@ -1,9 +1,11 @@
 """Database utility functions."""
 
-from urllib.parse import unquote, urlparse
+from apolo_app_types.protocols.postgres import CrunchyPostgresUserCredentials
 
 
-def parse_postgres_connection_string(connection_string: str) -> dict[str, str | int]:
+def parse_postgres_connection_string(
+    credentials: CrunchyPostgresUserCredentials,
+) -> dict[str, str | int]:
     """
     Parse a PostgreSQL connection string and extract its components.
 
@@ -31,19 +33,12 @@ def parse_postgres_connection_string(connection_string: str) -> dict[str, str | 
             'database': 'mydb'
         }
     """
-    parsed = urlparse(connection_string)
 
     # Extract components
-    user = parsed.username or ""
-    password = unquote(parsed.password) if parsed.password else ""
-    host = parsed.hostname or ""
-    port = parsed.port or 5432
-    database = parsed.path.lstrip("/") if parsed.path else ""
 
     return {
-        "user": user,
-        "password": password,
-        "host": host,
-        "port": port,
-        "database": database,
+        "user": credentials.user,
+        "host": credentials.pgbouncer_host,
+        "port": credentials.pgbouncer_port or 5432,
+        "database": credentials.dbname or "",
     }
