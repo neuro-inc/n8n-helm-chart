@@ -1,3 +1,4 @@
+import secrets
 import typing as t
 
 from apolo_sdk import Client
@@ -51,16 +52,25 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
         raise ValueError(err)
 
     def get_extra_env(
-        self, input_: N8nAppInputs, app_secrets_name: str
+        self,
+        input_: N8nAppInputs,
+        app_secrets_name: str,
+        app_id: str,
+        webhook_url: str | None = None,
     ) -> dict[str, t.Any]:
         db = input_.database_config.database
+        envs = {}
         if db.database_type == DBTypes.POSTGRES:
-            return {
-                "DB_POSTGRESDB_PASSWORD": serialize_optional_secret(
-                    value=db.credentials.password, secret_name=app_secrets_name
-                )
-            }
-        return {}
+            envs["DB_POSTGRESDB_PASSWORD"] = serialize_optional_secret(
+                value=db.credentials.password, secret_name=app_secrets_name
+            )
+        if webhook_url:
+            envs["WEBHOOK_URL"] = {"value": webhook_url}
+            envs["EXECUTIONS_MODE"] = {"value": "queue"}
+            # must be in sync with fullnameOverride in valkey
+            envs["QUEUE_BULL_REDIS_HOST"] = {"value": f"n8n-{app_id}-valkey-primary"}
+            envs["QUEUE_BULL_REDIS_TLS"] = {"value": "false"}
+        return envs
 
     async def preset_to_values(self, preset: Preset) -> dict[str, t.Any]:
         apolo_preset = get_preset(self.client, preset.name)
@@ -78,6 +88,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 "labels": {"service": "worker"},
             },
             "replicaCount": config.replicas,
+            "enabled": config.replicas > 0,
             **(await self.preset_to_values(config.preset)),
         }
 
@@ -88,6 +99,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 "labels": {"service": "webhook"},
             },
             "replicaCount": config.replicas,
+            "enabled": config.replicas > 0,
             **(await self.preset_to_values(config.preset)),
         }
 
@@ -104,12 +116,20 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             ),
         }
 
-    async def get_redis_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
+    def is_webhook_enabled(self, input_: N8nAppInputs) -> bool:
+        return input_.webhook_config.replicas > 0
+
+    async def get_redis_values(
+        self, input_: N8nAppInputs, app_id: str
+    ) -> dict[str, t.Any]:
         config = input_.valkey_config
         values = {
+            # due to https://github.com/kubernetes/kubernetes/issues/64023
+            "fullnameOverride": f"n8n-{app_id}-valkey",
             "global": {"security": {"allowInsecureImages": True}},
             "image": {"repository": "bitnamilegacy/valkey"},
-            "enabled": True,
+            "auth": {"enabled": False},
+            "enabled": self.is_webhook_enabled(input_),
             "architecture": str(config.architecture.architecture_type.value),
             "primary": {
                 **(await self.preset_to_values(config.preset)),
@@ -170,6 +190,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             namespace=namespace,
             ingress_http=input_.networking.ingress_http,
         )
+
         main_config = {
             "resources": extra_values["resources"],
             "tolerations": extra_values["tolerations"],
@@ -178,8 +199,8 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             "config": {
                 "db": self.get_database_values(input_),
             },
+            "secret": {"n8n": {"encryption_key": secrets.token_hex(32)}},
             "service": {"labels": {"service": "main"}},
-            "extraEnv": self.get_extra_env(input_, app_secrets_name),
         }
         if isinstance(input_.main_app_config.replica_scaling, AutoscalingHPA):
             main_config["autoscaling"] = self.get_autoscaling_values(
@@ -191,9 +212,26 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             )
 
         ingress = extra_values["ingress"]
+        webhook_url = None
         for i, host in enumerate(ingress["hosts"]):
             paths = host["paths"]
             ingress["hosts"][i]["paths"] = [p["path"] for p in paths]
+            if self.is_webhook_enabled(input_):
+                webhook_url = "https://" + host["host"]
+
+        if self.is_webhook_enabled(input_):
+            main_config["config"]["queue"] = {
+                "health": {"check": {"active": True}},
+                "bull": {
+                    "redis": {
+                        "host": f"n8n-{app_id}-valkey-primary",
+                        "port": 6379,
+                        "tls": False,
+                    }
+                },
+            }
+            main_config["config"]["executions_mode"] = "queue"
+            main_config["config"]["webhook_url"] = webhook_url
 
         # storage
         if input_.main_app_config.persistence:
@@ -221,12 +259,26 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 )
             main_config["useApoloStorage"] = True
 
+        extra_env = self.get_extra_env(
+            input_=input_,
+            app_secrets_name=app_secrets_name,
+            app_id=app_id,
+            webhook_url=webhook_url,
+        )
+        main_config["extraEnv"] = extra_env
+
+        worker_config = await self.get_worker_values(input_)
+        worker_config["extraEnv"] = extra_env
+
+        webhook_config = await self.get_webhook_values(input_)
+        webhook_config["extraEnv"] = extra_env
+
         return {
             "apolo_app_id": extra_values["apolo_app_id"],
             "ingress": ingress,
             "main": main_config,
-            "worker": await self.get_worker_values(input_),
-            "webhook": await self.get_webhook_values(input_),
-            "valkey": await self.get_redis_values(input_),
+            "worker": worker_config,
+            "webhook": webhook_config,
+            "valkey": await self.get_redis_values(input_, app_id),
             "labels": {"application": "n8n"},
         }

@@ -4,6 +4,7 @@ import asyncio
 import os
 import tempfile
 from pathlib import Path
+from unittest.mock import ANY
 
 import pytest
 import yaml
@@ -200,7 +201,8 @@ async def test_helm_template_with_generated_values_standalone(
 
         # Verify we have expected resources
         resource_kinds = {m.get("kind") for m in manifests if m}
-        assert "Deployment" in resource_kinds or "StatefulSet" in resource_kinds
+        assert "Deployment" in resource_kinds
+        assert "StatefulSet" in resource_kinds
         assert "Service" in resource_kinds
 
         # Verify Valkey StatefulSet is present
@@ -214,6 +216,295 @@ async def test_helm_template_with_generated_values_standalone(
 
     finally:
         values_path.unlink()
+    assert helm_values == {
+        "apolo_app_id": "test-app-id",
+        "ingress": {
+            "enabled": True,
+            "className": "traefik",
+            "hosts": [
+                {"host": "n8n--test-app-id.apps.some.org.neu.ro", "paths": ["/"]}
+            ],
+            "annotations": {
+                "traefik.ingress.kubernetes.io/router.middlewares": "platform-platform-control-plane-ingress-auth@kubernetescrd"  # noqa: E501
+            },
+            "grpc": {"enabled": False},
+        },
+        "main": {
+            "resources": {
+                "requests": {"cpu": "2000.0m", "memory": "0M"},
+                "limits": {"cpu": "2000.0m", "memory": "0M"},
+            },
+            "tolerations": [
+                {
+                    "effect": "NoSchedule",
+                    "key": "platform.neuromation.io/job",
+                    "operator": "Exists",
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/not-ready",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/unreachable",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+            ],
+            "affinity": {
+                "nodeAffinity": {
+                    "requiredDuringSchedulingIgnoredDuringExecution": {
+                        "nodeSelectorTerms": [
+                            {
+                                "matchExpressions": [
+                                    {
+                                        "key": "platform.neuromation.io/nodepool",
+                                        "operator": "In",
+                                        "values": ["cpu_pool"],
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "podLabels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+                "platform.apolo.us/inject-storage": "true",
+                "platform.apolo.us/org": "test-org",
+                "platform.apolo.us/project": "test-project",
+            },
+            "config": {
+                "db": {
+                    "type": "sqlite",
+                    "sqlite": {"pool_size": 1, "vacuum_on_startup": True},
+                },
+                "queue": {
+                    "health": {"check": {"active": True}},
+                    "bull": {
+                        "redis": {
+                            "host": "n8n-test-app-id-valkey-primary",
+                            "port": 6379,
+                            "tls": False,
+                        }
+                    },
+                },
+                "executions_mode": "queue",
+                "webhook_url": "https://n8n--test-app-id.apps.some.org.neu.ro",
+            },
+            "secret": {"n8n": {"encryption_key": ANY}},
+            "service": {"labels": {"service": "main"}},
+            "replicaCount": 1,
+            "podAnnotations": {
+                "platform.apolo.us/inject-storage": '[{"storage_uri": "storage://cluster/test-org/test-project/.apps/n8n/n8n-app", "mount_path": "/home/node/.n8n", "mount_mode": "rw"}]'  # noqa: E501
+            },
+            "useApoloStorage": True,
+            "extraEnv": {
+                "WEBHOOK_URL": {
+                    "value": "https://n8n--test-app-id.apps.some.org.neu.ro"
+                },
+                "EXECUTIONS_MODE": {"value": "queue"},
+                "QUEUE_BULL_REDIS_HOST": {"value": "n8n-test-app-id-valkey-primary"},
+                "QUEUE_BULL_REDIS_TLS": {"value": "false"},
+            },
+        },
+        "worker": {
+            "service": {"labels": {"service": "worker"}},
+            "replicaCount": 2,
+            "enabled": True,
+            "labels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "resources": {
+                "requests": {"cpu": "2000.0m", "memory": "0M"},
+                "limits": {"cpu": "2000.0m", "memory": "0M"},
+            },
+            "tolerations": [
+                {
+                    "effect": "NoSchedule",
+                    "key": "platform.neuromation.io/job",
+                    "operator": "Exists",
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/not-ready",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/unreachable",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+            ],
+            "affinity": {
+                "nodeAffinity": {
+                    "requiredDuringSchedulingIgnoredDuringExecution": {
+                        "nodeSelectorTerms": [
+                            {
+                                "matchExpressions": [
+                                    {
+                                        "key": "platform.neuromation.io/nodepool",
+                                        "operator": "In",
+                                        "values": ["cpu_pool"],
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "podLabels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "deploymentLabels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "extraEnv": {
+                "WEBHOOK_URL": {
+                    "value": "https://n8n--test-app-id.apps.some.org.neu.ro"
+                },
+                "EXECUTIONS_MODE": {"value": "queue"},
+                "QUEUE_BULL_REDIS_HOST": {"value": "n8n-test-app-id-valkey-primary"},
+                "QUEUE_BULL_REDIS_TLS": {"value": "false"},
+            },
+        },
+        "webhook": {
+            "service": {"labels": {"service": "webhook"}},
+            "replicaCount": 1,
+            "enabled": True,
+            "labels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "resources": {
+                "requests": {"cpu": "2000.0m", "memory": "0M"},
+                "limits": {"cpu": "2000.0m", "memory": "0M"},
+            },
+            "tolerations": [
+                {
+                    "effect": "NoSchedule",
+                    "key": "platform.neuromation.io/job",
+                    "operator": "Exists",
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/not-ready",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+                {
+                    "effect": "NoExecute",
+                    "key": "node.kubernetes.io/unreachable",
+                    "operator": "Exists",
+                    "tolerationSeconds": 300,
+                },
+            ],
+            "affinity": {
+                "nodeAffinity": {
+                    "requiredDuringSchedulingIgnoredDuringExecution": {
+                        "nodeSelectorTerms": [
+                            {
+                                "matchExpressions": [
+                                    {
+                                        "key": "platform.neuromation.io/nodepool",
+                                        "operator": "In",
+                                        "values": ["cpu_pool"],
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "podLabels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "deploymentLabels": {
+                "platform.apolo.us/component": "app",
+                "platform.apolo.us/preset": "cpu-small",
+            },
+            "extraEnv": {
+                "WEBHOOK_URL": {
+                    "value": "https://n8n--test-app-id.apps.some.org.neu.ro"
+                },
+                "EXECUTIONS_MODE": {"value": "queue"},
+                "QUEUE_BULL_REDIS_HOST": {"value": "n8n-test-app-id-valkey-primary"},
+                "QUEUE_BULL_REDIS_TLS": {"value": "false"},
+            },
+        },
+        "valkey": {
+            "fullnameOverride": "n8n-test-app-id-valkey",
+            "global": {"security": {"allowInsecureImages": True}},
+            "image": {"repository": "bitnamilegacy/valkey"},
+            "auth": {"enabled": False},
+            "enabled": True,
+            "architecture": "standalone",
+            "primary": {
+                "labels": {
+                    "platform.apolo.us/component": "app",
+                    "platform.apolo.us/preset": "cpu-small",
+                },
+                "resources": {
+                    "requests": {"cpu": "2000.0m", "memory": "0M"},
+                    "limits": {"cpu": "2000.0m", "memory": "0M"},
+                },
+                "tolerations": [
+                    {
+                        "effect": "NoSchedule",
+                        "key": "platform.neuromation.io/job",
+                        "operator": "Exists",
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300,
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300,
+                    },
+                ],
+                "affinity": {
+                    "nodeAffinity": {
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "platform.neuromation.io/nodepool",
+                                            "operator": "In",
+                                            "values": ["cpu_pool"],
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "platform.apolo.us/component": "app",
+                    "platform.apolo.us/preset": "cpu-small",
+                },
+                "deploymentLabels": {
+                    "platform.apolo.us/component": "app",
+                    "platform.apolo.us/preset": "cpu-small",
+                },
+            },
+        },
+        "labels": {"application": "n8n"},
+    }
 
 
 @pytest.mark.skipif(
