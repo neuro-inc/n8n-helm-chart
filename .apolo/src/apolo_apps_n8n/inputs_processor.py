@@ -1,4 +1,3 @@
-import secrets
 import typing as t
 
 from apolo_sdk import Client
@@ -203,7 +202,6 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             "config": {
                 "db": self.get_database_values(input_),
             },
-            "secret": {"n8n": {"encryption_key": secrets.token_hex(32)}},
             "service": {"labels": {"service": "main"}},
         }
         if isinstance(input_.main_app_config.replica_scaling, AutoscalingHPA):
