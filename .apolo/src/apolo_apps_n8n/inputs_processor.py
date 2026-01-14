@@ -123,9 +123,10 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
         self, input_: N8nAppInputs, app_id: str
     ) -> dict[str, t.Any]:
         config = input_.valkey_config
+        # fullnameOverride due to https://github.com/kubernetes/kubernetes/issues/64023
+        # and https://github.com/openebs/openebs/issues/3343
         values = {
-            # due to https://github.com/kubernetes/kubernetes/issues/64023
-            "fullnameOverride": f"n8n-{app_id}-valkey",
+            "fullnameOverride": f"n8n-{app_id[:16]}-valkey",
             "global": {"security": {"allowInsecureImages": True}},
             "image": {"repository": "bitnamilegacy/valkey"},
             "auth": {"enabled": False},
