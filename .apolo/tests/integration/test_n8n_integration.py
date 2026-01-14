@@ -1,13 +1,16 @@
 """Integration tests for N8n app that generate helm values and validate with helm."""
 
 import asyncio
+import contextlib
 import os
 import tempfile
+import typing as t
 from pathlib import Path
-from unittest.mock import ANY
 
+import apolo_sdk
 import pytest
 import yaml
+import yarl
 from apolo_apps_n8n.app_types import (
     DataBaseConfig,
     DBTypes,
@@ -149,15 +152,33 @@ def inputs_with_postgres():
     )
 
 
+@pytest.fixture
+def apolo_client(setup_clients):
+    apolo_sdk_client = setup_clients
+
+    @contextlib.asynccontextmanager
+    async def _open(uri: yarl.URL) -> t.AsyncIterator[bytes]:
+        async def generator():
+            if uri != yarl.URL("storage:.apps/n8n/n8n-app/config"):
+                raise apolo_sdk.ResourceNotFound()
+            payload = '{"encryptionKey": "some-encryption-key"}'
+            for char in payload:
+                yield char.encode()
+
+        yield generator()
+
+    apolo_sdk_client.storage.open = _open
+    return apolo_sdk_client
+
+
 @pytest.mark.skipif(
     os.system("which helm > /dev/null 2>&1") != 0,
     reason="helm not installed",
 )
 async def test_helm_template_with_generated_values_standalone(
-    setup_clients, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
+    apolo_client, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
 ):
     """Test that helm template works with generated values (standalone Valkey)."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -295,7 +316,7 @@ async def test_helm_template_with_generated_values_standalone(
                 "executions_mode": "queue",
                 "webhook_url": "https://n8n--test-app-id.apps.some.org.neu.ro",
             },
-            "secret": {"n8n": {"encryption_key": ANY}},
+            "secret": {"n8n": {"encryption_key": "some-encryption-key"}},
             "service": {"labels": {"service": "main"}},
             "replicaCount": 1,
             "podAnnotations": {
@@ -512,10 +533,9 @@ async def test_helm_template_with_generated_values_standalone(
     reason="helm not installed",
 )
 async def test_helm_template_with_generated_values_replication(
-    setup_clients, mock_get_preset_cpu, inputs_with_valkey_replication, chart_path
+    apolo_client, mock_get_preset_cpu, inputs_with_valkey_replication, chart_path
 ):
     """Test that helm template works with Valkey replication and autoscaling."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -585,10 +605,9 @@ async def test_helm_template_with_generated_values_replication(
     reason="helm not installed",
 )
 async def test_helm_lint_with_generated_values(
-    setup_clients, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
+    apolo_client, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
 ):
     """Test that helm lint passes with generated values."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -683,10 +702,9 @@ def inputs_with_custom_persistence_path():
     reason="helm not installed",
 )
 async def test_helm_template_with_persistence_none(
-    setup_clients, mock_get_preset_cpu, inputs_with_persistence_none, chart_path
+    apolo_client, mock_get_preset_cpu, inputs_with_persistence_none, chart_path
 ):
     """Test that helm template works with persistence=None."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -742,13 +760,12 @@ async def test_helm_template_with_persistence_none(
     reason="helm not installed",
 )
 async def test_helm_template_with_custom_persistence_path(
-    setup_clients,
+    apolo_client,
     mock_get_preset_cpu,
     inputs_with_custom_persistence_path,
     chart_path,
 ):
     """Test that helm template works with custom persistence path."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
