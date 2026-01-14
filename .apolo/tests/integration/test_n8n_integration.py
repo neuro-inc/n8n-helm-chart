@@ -4,7 +4,6 @@ import asyncio
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import ANY
 
 import pytest
 import yaml
@@ -295,7 +294,6 @@ async def test_helm_template_with_generated_values_standalone(
                 "executions_mode": "queue",
                 "webhook_url": "https://n8n--test-app-id.apps.some.org.neu.ro",
             },
-            "secret": {"n8n": {"encryption_key": ANY}},
             "service": {"labels": {"service": "main"}},
             "replicaCount": 1,
             "podAnnotations": {
