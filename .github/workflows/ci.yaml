@@ -71,7 +71,7 @@ jobs:
       - name: Release development image
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
         run: |
-          export IMAGE_TAG=master
+          export IMAGE_TAG=main
           make hook-push-image
       - name: Release prod image
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
