@@ -1,16 +1,12 @@
 """Integration tests for N8n app that generate helm values and validate with helm."""
 
 import asyncio
-import contextlib
 import os
 import tempfile
-import typing as t
 from pathlib import Path
 
-import apolo_sdk
 import pytest
 import yaml
-import yarl
 from apolo_apps_n8n.app_types import (
     DataBaseConfig,
     DBTypes,
@@ -150,25 +146,6 @@ def inputs_with_postgres():
             )
         ),
     )
-
-
-@pytest.fixture
-def apolo_client(setup_clients):
-    apolo_sdk_client = setup_clients
-
-    @contextlib.asynccontextmanager
-    async def _open(uri: yarl.URL) -> t.AsyncIterator[bytes]:
-        async def generator():
-            if uri != yarl.URL("storage:.apps/n8n/n8n-app/config"):
-                raise apolo_sdk.ResourceNotFound()
-            payload = '{"encryptionKey": "some-encryption-key"}'
-            for char in payload:
-                yield char.encode()
-
-        yield generator()
-
-    apolo_sdk_client.storage.open = _open
-    return apolo_sdk_client
 
 
 @pytest.mark.skipif(
