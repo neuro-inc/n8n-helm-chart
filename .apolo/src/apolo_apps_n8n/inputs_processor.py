@@ -68,7 +68,9 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             envs["WEBHOOK_URL"] = {"value": webhook_url}
             envs["EXECUTIONS_MODE"] = {"value": "queue"}
             # must be in sync with fullnameOverride in valkey
-            envs["QUEUE_BULL_REDIS_HOST"] = {"value": f"n8n-{app_id}-valkey-primary"}
+            envs["QUEUE_BULL_REDIS_HOST"] = {
+                "value": f"n8n-{app_id[:16]}-valkey-primary"
+            }
             envs["QUEUE_BULL_REDIS_TLS"] = {"value": "false"}
         return envs
 
@@ -126,6 +128,7 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
         # fullnameOverride due to https://github.com/kubernetes/kubernetes/issues/64023
         # and https://github.com/openebs/openebs/issues/3343
         values = {
+            # must be in sync with values in get_extra_env and gen_extra_values
             "fullnameOverride": f"n8n-{app_id[:16]}-valkey",
             "global": {"security": {"allowInsecureImages": True}},
             "image": {"repository": "bitnamilegacy/valkey"},
@@ -225,7 +228,8 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
                 "health": {"check": {"active": True}},
                 "bull": {
                     "redis": {
-                        "host": f"n8n-{app_id}-valkey-primary",
+                        # must be in sync with fullnameOverride in get_redis_values
+                        "host": f"n8n-{app_id[:16]}-valkey-primary",
                         "port": 6379,
                         "tls": False,
                     }
