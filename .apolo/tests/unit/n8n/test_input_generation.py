@@ -84,10 +84,9 @@ def postgres_n8n_inputs():
 
 
 async def test_n8n_values_generation_with_sqlite(
-    setup_clients, mock_get_preset_cpu, basic_n8n_inputs
+    apolo_client, mock_get_preset_cpu, basic_n8n_inputs
 ):
     """Test N8n values generation with SQLite database configuration."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
     helm_params = await input_processor.gen_extra_values(
         input_=basic_n8n_inputs,
@@ -155,10 +154,9 @@ async def test_n8n_values_generation_with_sqlite(
 
 
 async def test_n8n_values_generation_with_postgres(
-    setup_clients, mock_get_preset_cpu, postgres_n8n_inputs
+    apolo_client, mock_get_preset_cpu, postgres_n8n_inputs
 ):
     """Test N8n values generation with PostgreSQL database configuration."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
     helm_params = await input_processor.gen_extra_values(
         input_=postgres_n8n_inputs,
@@ -181,11 +179,8 @@ async def test_n8n_values_generation_with_postgres(
     assert pg_config["database"] == "testdb"
 
 
-async def test_database_config_without_pgbouncer_uri(
-    setup_clients, mock_get_preset_cpu
-):
+async def test_database_config_without_pgbouncer_uri(apolo_client, mock_get_preset_cpu):
     """Test that error is raised when pgbouncer_uri is None."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Create inputs with missing pgbouncer_uri
@@ -231,10 +226,9 @@ async def test_database_config_without_pgbouncer_uri(
 
 
 async def test_database_config_with_empty_pgbouncer_uri(
-    setup_clients, mock_get_preset_cpu
+    apolo_client, mock_get_preset_cpu
 ):
     """Test that error is raised when pgbouncer_uri is an empty string."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Create inputs with empty pgbouncer_uri
@@ -280,10 +274,9 @@ async def test_database_config_with_empty_pgbouncer_uri(
 
 
 async def test_valkey_replication_without_autoscaling(
-    setup_clients, mock_get_preset_cpu
+    apolo_client, mock_get_preset_cpu
 ):
     """Test Valkey replication mode without autoscaling."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     inputs = N8nAppInputs(
@@ -332,9 +325,8 @@ async def test_valkey_replication_without_autoscaling(
     assert "autoscaling" not in valkey_config["replica"]
 
 
-async def test_valkey_replication_with_autoscaling(setup_clients, mock_get_preset_cpu):
+async def test_valkey_replication_with_autoscaling(apolo_client, mock_get_preset_cpu):
     """Test Valkey replication mode with autoscaling enabled."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     inputs = N8nAppInputs(
@@ -383,9 +375,8 @@ async def test_valkey_replication_with_autoscaling(setup_clients, mock_get_prese
     assert hpa_config["targetMemory"] == 80
 
 
-async def test_persistence_none_with_sqlite(setup_clients, mock_get_preset_cpu):
+async def test_persistence_none_with_sqlite(apolo_client, mock_get_preset_cpu):
     """Test N8n values generation with persistence=None and SQLite database."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     inputs = N8nAppInputs(
@@ -419,9 +410,8 @@ async def test_persistence_none_with_sqlite(setup_clients, mock_get_preset_cpu):
     assert "config" in helm_params["main"]
 
 
-async def test_persistence_none_with_postgres(setup_clients, mock_get_preset_cpu):
+async def test_persistence_none_with_postgres(apolo_client, mock_get_preset_cpu):
     """Test N8n values generation with persistence=None and PostgreSQL database."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     inputs = N8nAppInputs(
@@ -469,9 +459,8 @@ async def test_persistence_none_with_postgres(setup_clients, mock_get_preset_cpu
     assert db_config["type"] == "postgresdb"
 
 
-async def test_custom_persistence_path_with_sqlite(setup_clients, mock_get_preset_cpu):
+async def test_custom_persistence_path_with_sqlite(apolo_client, mock_get_preset_cpu):
     """Test N8n values generation with custom persistence path and SQLite."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     custom_path = "storage://test-cluster/custom/n8n/data"
@@ -509,11 +498,8 @@ async def test_custom_persistence_path_with_sqlite(setup_clients, mock_get_prese
     assert helm_params["main"]["config"]["db"]["type"] == "sqlite"
 
 
-async def test_custom_persistence_path_with_postgres(
-    setup_clients, mock_get_preset_cpu
-):
+async def test_custom_persistence_path_with_postgres(apolo_client, mock_get_preset_cpu):
     """Test N8n values generation with custom persistence path and PostgreSQL."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     custom_path = "storage://test-cluster/custom/n8n/data"

@@ -4,7 +4,6 @@ import asyncio
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import ANY
 
 import pytest
 import yaml
@@ -154,10 +153,9 @@ def inputs_with_postgres():
     reason="helm not installed",
 )
 async def test_helm_template_with_generated_values_standalone(
-    setup_clients, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
+    apolo_client, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
 ):
     """Test that helm template works with generated values (standalone Valkey)."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -295,7 +293,7 @@ async def test_helm_template_with_generated_values_standalone(
                 "executions_mode": "queue",
                 "webhook_url": "https://n8n--test-app-id.apps.some.org.neu.ro",
             },
-            "secret": {"n8n": {"encryption_key": ANY}},
+            "secret": {"n8n": {"encryption_key": "some-encryption-key"}},
             "service": {"labels": {"service": "main"}},
             "replicaCount": 1,
             "podAnnotations": {
@@ -512,10 +510,9 @@ async def test_helm_template_with_generated_values_standalone(
     reason="helm not installed",
 )
 async def test_helm_template_with_generated_values_replication(
-    setup_clients, mock_get_preset_cpu, inputs_with_valkey_replication, chart_path
+    apolo_client, mock_get_preset_cpu, inputs_with_valkey_replication, chart_path
 ):
     """Test that helm template works with Valkey replication and autoscaling."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -585,10 +582,9 @@ async def test_helm_template_with_generated_values_replication(
     reason="helm not installed",
 )
 async def test_helm_lint_with_generated_values(
-    setup_clients, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
+    apolo_client, mock_get_preset_cpu, basic_inputs_with_valkey_standalone, chart_path
 ):
     """Test that helm lint passes with generated values."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -683,10 +679,9 @@ def inputs_with_custom_persistence_path():
     reason="helm not installed",
 )
 async def test_helm_template_with_persistence_none(
-    setup_clients, mock_get_preset_cpu, inputs_with_persistence_none, chart_path
+    apolo_client, mock_get_preset_cpu, inputs_with_persistence_none, chart_path
 ):
     """Test that helm template works with persistence=None."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values
@@ -742,13 +737,12 @@ async def test_helm_template_with_persistence_none(
     reason="helm not installed",
 )
 async def test_helm_template_with_custom_persistence_path(
-    setup_clients,
+    apolo_client,
     mock_get_preset_cpu,
     inputs_with_custom_persistence_path,
     chart_path,
 ):
     """Test that helm template works with custom persistence path."""
-    apolo_client = setup_clients
     input_processor = N8nAppChartValueProcessor(client=apolo_client)
 
     # Generate helm values

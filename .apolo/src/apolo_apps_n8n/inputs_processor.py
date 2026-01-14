@@ -1,7 +1,10 @@
+import json
+import logging
 import secrets
 import typing as t
 
-from apolo_sdk import Client
+import apolo_sdk
+from yarl import URL
 
 from apolo_app_types import ApoloFilesMount
 from apolo_app_types.app_types import AppType
@@ -27,10 +30,13 @@ from apolo_apps_n8n.app_types import DBTypes, N8nAppInputs, ValkeyArchitectureTy
 from apolo_apps_n8n.db_utils import parse_postgres_connection_string
 
 
+logger = logging.getLogger(__name__)
+
+
 class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
     _port: int = 5678
 
-    def __init__(self, client: Client, *args: t.Any, **kwargs: t.Any):
+    def __init__(self, client: apolo_sdk.Client, *args: t.Any, **kwargs: t.Any):
         super().__init__(client, *args, **kwargs)
 
     def get_database_values(self, input_: N8nAppInputs) -> dict[str, t.Any]:
@@ -164,6 +170,30 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             values["replica"] = replica_config
         return values
 
+    async def get_encryption_key(self, input_: N8nAppInputs) -> str:
+        if input_.main_app_config.persistence:
+            persistence_uri = URL(input_.main_app_config.persistence.storage_mount.path)
+            config_file_url = persistence_uri / "config"
+            config_content = "{'data': '<this-is-a-placeholder>'}"
+            try:
+                async with self.client.storage.open(config_file_url) as it:
+                    buffer = bytearray()
+                    async for chunk in it:
+                        buffer.extend(chunk)
+                    config_content = json.loads(buffer)
+                    return config_content["encryptionKey"]
+            except apolo_sdk.ResourceNotFound:
+                # no config file exists, that's ok for new app
+                pass
+            except KeyError:
+                logger.warning(
+                    "No encryption key found in config file, generating new one."
+                    " Content: %s",
+                    config_content,
+                )
+
+        return secrets.token_hex(32)
+
     async def gen_extra_values(
         self,
         input_: N8nAppInputs,
@@ -203,7 +233,9 @@ class N8nAppChartValueProcessor(BaseChartValueProcessor[N8nAppInputs]):
             "config": {
                 "db": self.get_database_values(input_),
             },
-            "secret": {"n8n": {"encryption_key": secrets.token_hex(32)}},
+            "secret": {
+                "n8n": {"encryption_key": await self.get_encryption_key(input_)}
+            },
             "service": {"labels": {"service": "main"}},
         }
         if isinstance(input_.main_app_config.replica_scaling, AutoscalingHPA):
