@@ -206,8 +206,15 @@
           "x-title": "Postgres Port"
         },
         "pgbouncer_host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "title": "Pgbouncer Host",
-          "type": "string",
           "x-description": "Host of the PGBouncer instance.",
           "x-is-advanced-field": false,
           "x-is-configurable": true,
@@ -215,9 +222,16 @@
           "x-title": "PGBouncer Host"
         },
         "pgbouncer_port": {
-          "exclusiveMinimum": 0,
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "title": "Pgbouncer Port",
-          "type": "integer",
           "x-description": "Port of the PGBouncer instance.",
           "x-is-advanced-field": false,
           "x-is-configurable": true,
@@ -371,7 +385,9 @@
     "MainApplicationConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Main Application instance. Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+          "x-title": "Main Application preset"
         },
         "replica_scaling": {
           "anyOf": [
@@ -554,7 +570,9 @@
     "ValkeyConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Valkey/Redis database server instance. Minimal resources: 0.1 CPU cores, 128 MiB memory.",
+          "x-title": "Valkey/Redis preset"
         },
         "architecture": {
           "anyOf": [
@@ -646,7 +664,9 @@
     "WebhookConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Webhook processing instances. Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+          "x-title": "Webhook preset"
         },
         "replicas": {
           "title": "Replicas",
@@ -669,7 +689,9 @@
     "WorkerConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Worker. Minimal resources: 1 CPU cores, 2 GiB memory.",
+          "x-title": "Worker preset"
         },
         "replicas": {
           "title": "Replicas",

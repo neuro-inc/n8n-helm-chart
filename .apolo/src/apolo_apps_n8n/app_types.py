@@ -128,7 +128,15 @@ class MainApplicationConfig(AbstractAppFieldType):
             "manages the user interface.",
         ).as_json_schema_extra(),
     )
-    preset: Preset
+    preset: Preset = Field(
+        ...,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Main Application preset",
+            description="Select the resource preset used for the "
+            "Main Application instance. "
+            "Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+        ).as_json_schema_extra(),
+    )
     replica_scaling: ReplicaCount | AutoscalingHPA = Field(
         default=ReplicaCount(replicas=1),
         json_schema_extra=SchemaExtraMetadata(
@@ -150,7 +158,14 @@ class WorkerConfig(AbstractAppFieldType):
             "computational work.",
         ).as_json_schema_extra(),
     )
-    preset: Preset
+    preset: Preset = Field(
+        ...,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Worker preset",
+            description="Select the resource preset used for the Worker. "
+            "Minimal resources: 1 CPU cores, 2 GiB memory.",
+        ).as_json_schema_extra(),
+    )
     replicas: int = Field()
 
 
@@ -164,7 +179,15 @@ class WebhookConfig(AbstractAppFieldType):
             "for webhook traffic without competing with core workflow execution.",
         ).as_json_schema_extra(),
     )
-    preset: Preset
+    preset: Preset = Field(
+        ...,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Webhook preset",
+            description="Select the resource preset used for the Webhook "
+            "processing instances. "
+            "Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+        ).as_json_schema_extra(),
+    )
     replicas: int = Field()
 
 
@@ -227,7 +250,15 @@ class ValkeyConfig(AbstractAppFieldType):
             title="Valkey/Redis Configuration", description=""
         ).as_json_schema_extra(),
     )
-    preset: Preset
+    preset: Preset = Field(
+        ...,
+        json_schema_extra=SchemaExtraMetadata(
+            title="Valkey/Redis preset",
+            description="Select the resource preset used for the "
+            "Valkey/Redis database server instance. "
+            "Minimal resources: 0.1 CPU cores, 128 MiB memory.",
+        ).as_json_schema_extra(),
+    )
     architecture: ValkeyArchs
 
 
