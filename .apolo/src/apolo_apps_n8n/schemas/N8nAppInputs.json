@@ -371,7 +371,9 @@
     "MainApplicationConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Main Application instance. Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+          "x-title": "Main Application preset"
         },
         "replica_scaling": {
           "anyOf": [
@@ -554,7 +556,9 @@
     "ValkeyConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Valkey/Redis database server instance. Minimal resources: 0.1 CPU cores, 128 MiB memory.",
+          "x-title": "Valkey/Redis preset"
         },
         "architecture": {
           "anyOf": [
@@ -646,7 +650,9 @@
     "WebhookConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Webhook processing instances. Minimal resources: 0.2 CPU cores, 512 MiB memory.",
+          "x-title": "Webhook preset"
         },
         "replicas": {
           "title": "Replicas",
@@ -669,7 +675,9 @@
     "WorkerConfig": {
       "properties": {
         "preset": {
-          "$ref": "#/$defs/Preset"
+          "$ref": "#/$defs/Preset",
+          "x-description": "Select the resource preset used for the Worker. Minimal resources: 1 CPU cores, 2 GiB memory.",
+          "x-title": "Worker preset"
         },
         "replicas": {
           "title": "Replicas",
